@@ -1,3 +1,4 @@
+import React from "react";
 import "@profesional/ui/styles";
 
 export default function RootLayout({
