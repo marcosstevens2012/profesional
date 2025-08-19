@@ -1,5 +1,5 @@
-import React from "react";
 import "@profesional/ui/styles";
+import React from "react";
 
 export default function RootLayout({
   children,
