@@ -7,24 +7,33 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { CreateUser, UpdateUser, User } from "@profesional/contracts";
+import { Role, Roles } from "../common";
 import { UsersService } from "./users.service";
 
 @ApiTags("users")
+@ApiBearerAuth()
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ApiOperation({ summary: "Create a new user" })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: "Create a new user (Admin only)" })
   @ApiResponse({ status: 201, description: "User created successfully" })
   create(@Body() createUserDto: CreateUser): User {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  @ApiOperation({ summary: "Get all users" })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: "Get all users (Admin only)" })
   @ApiResponse({ status: 200, description: "List of users" })
   findAll(): User[] {
     return this.usersService.findAll();
@@ -50,7 +59,8 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @ApiOperation({ summary: "Delete user by ID" })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: "Delete user by ID (Admin only)" })
   @ApiResponse({ status: 200, description: "User deleted successfully" })
   @ApiResponse({ status: 404, description: "User not found" })
   remove(@Param("id") id: string): { success: boolean } {

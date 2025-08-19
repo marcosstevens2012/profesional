@@ -1,15 +1,65 @@
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import { I18nProvider } from "@/lib/i18n-provider";
+import { QueryProvider } from "@/lib/query-provider";
+import { ThemeProvider } from "@/lib/theme-provider";
 import "@profesional/ui/styles";
-import React from "react";
+import { type Metadata } from "next";
+import { Inter } from "next/font/google";
+import { type ReactNode } from "react";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Profesional",
+    default: "Profesional - Conecta con Profesionales de Confianza",
+  },
+  description:
+    "Encuentra y contrata servicios profesionales de calidad en tu área. Marketplace de profesionales verificados.",
+  keywords: [
+    "servicios profesionales",
+    "marketplace",
+    "Argentina",
+    "profesionales",
+  ],
+  authors: [{ name: "Profesional Team" }],
+  creator: "Profesional",
+  publisher: "Profesional",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName: "Profesional",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <div className="min-h-screen bg-background">{children}</div>
+    <html lang="es-AR" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
+        <ThemeProvider>
+          <QueryProvider>
+            <I18nProvider>
+              <div className="relative min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </I18nProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

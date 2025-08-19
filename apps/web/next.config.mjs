@@ -4,6 +4,10 @@ const nextConfig = {
   experimental: {
     externalDir: true,
   },
+  images: {
+    domains: ['localhost', 'example.com'],
+    formats: ['image/webp', 'image/avif'],
+  },
 };
 
 export default nextConfig;
