@@ -5,8 +5,8 @@ const nextConfig = {
     externalDir: true,
   },
   images: {
-    domains: ['localhost', 'example.com'],
-    formats: ['image/webp', 'image/avif'],
+    domains: ["localhost", "example.com"],
+    formats: ["image/webp", "image/avif"],
   },
 };
 
