@@ -3,8 +3,11 @@ import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
 export enum Role {
+  // eslint-disable-next-line no-unused-vars
   ADMIN = "admin",
+  // eslint-disable-next-line no-unused-vars
   PROFESSIONAL = "professional",
+  // eslint-disable-next-line no-unused-vars
   CLIENT = "client",
 }
 

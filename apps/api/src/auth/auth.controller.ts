@@ -8,7 +8,6 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import {
-  AuthResponse,
   AuthTokens,
   ForgotPasswordRequest,
   LoginRequest,
@@ -26,33 +25,33 @@ import { AuthService } from "./auth.service";
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly _authService: AuthService) {}
 
   @Public()
   @Post("register")
-  async register(@Body() dto: RegisterRequest): Promise<AuthResponse> {
-    return this.authService.register(dto);
+  async register(@Body() registerDto: RegisterRequest) {
+    return this._authService.register(registerDto);
   }
 
   @Public()
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginRequest): Promise<AuthResponse> {
-    return this.authService.login(dto);
+  async login(@Body() loginDto: LoginRequest) {
+    return this._authService.login(loginDto);
   }
 
   @Public()
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Body() dto: RefreshTokenRequest): Promise<AuthTokens> {
-    return this.authService.refreshToken(dto);
+    return this._authService.refreshToken(dto);
   }
 
   @Public()
   @Post("verify-email")
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() dto: VerifyEmailRequest): Promise<MessageResponse> {
-    return this.authService.verifyEmail(dto);
+    return this._authService.verifyEmail(dto);
   }
 
   @Public()
@@ -61,7 +60,7 @@ export class AuthController {
   async forgotPassword(
     @Body() dto: ForgotPasswordRequest
   ): Promise<MessageResponse> {
-    return this.authService.forgotPassword(dto);
+    return this._authService.forgotPassword(dto);
   }
 
   @Public()
@@ -70,14 +69,14 @@ export class AuthController {
   async resetPassword(
     @Body() dto: ResetPasswordRequest
   ): Promise<MessageResponse> {
-    return this.authService.resetPassword(dto);
+    return this._authService.resetPassword(dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post("logout")
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user: JwtPayload): Promise<MessageResponse> {
-    return this.authService.logout(user.sub);
+    return this._authService.logout(user.sub);
   }
 
   @UseGuards(JwtAuthGuard)

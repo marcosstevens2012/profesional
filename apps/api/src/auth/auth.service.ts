@@ -29,12 +29,12 @@ export class AuthService {
   private readonly jwtConfig: JwtConfig;
 
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService,
-    private readonly emailService: EmailService,
-    configService: ConfigService
+    private readonly _jwtService: JwtService,
+    private readonly _prisma: PrismaService,
+    private readonly _emailService: EmailService,
+    _configService: ConfigService
   ) {
-    this.jwtConfig = configService.get<JwtConfig>("jwt")!;
+    this.jwtConfig = _configService.get<JwtConfig>("jwt")!;
   }
 
   /**
@@ -44,7 +44,7 @@ export class AuthService {
     const { email, password, name, role } = dto;
 
     // Check if user exists
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser = await this._prisma.user.findUnique({
       where: { email },
     });
 
@@ -56,7 +56,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user and profile in transaction
-    const user = await this.prisma.$transaction(async tx => {
+    const user = await this._prisma.$transaction(async tx => {
       const newUser = await tx.user.create({
         data: {
           email,
@@ -87,7 +87,7 @@ export class AuthService {
       });
 
       // Send verification email
-      await this.emailService.sendEmailVerification(email, verificationToken);
+      await this._emailService.sendEmailVerification(email, verificationToken);
 
       return newUser;
     });
@@ -121,7 +121,7 @@ export class AuthService {
     const { email, password } = dto;
 
     // Find user with profile
-    const user = await this.prisma.user.findUnique({
+    const user = await this._prisma.user.findUnique({
       where: { email },
       include: { profile: true },
     });
@@ -171,12 +171,12 @@ export class AuthService {
 
     try {
       // Verify refresh token
-      await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+      await this._jwtService.verifyAsync<JwtPayload>(refreshToken, {
         secret: this.jwtConfig.refreshSecret,
       });
 
       // Check if refresh token exists in database
-      const storedToken = await this.prisma.refreshToken.findUnique({
+      const storedToken = await this._prisma.refreshToken.findUnique({
         where: { token: refreshToken },
         include: { user: true },
       });
@@ -190,7 +190,7 @@ export class AuthService {
       }
 
       // Revoke old refresh token
-      await this.prisma.refreshToken.update({
+      await this._prisma.refreshToken.update({
         where: { id: storedToken.id },
         data: { revokedAt: new Date() },
       });
@@ -214,7 +214,7 @@ export class AuthService {
   async verifyEmail(dto: VerifyEmailRequest): Promise<MessageResponse> {
     const { token } = dto;
 
-    const verificationToken = await this.prisma.verificationToken.findUnique({
+    const verificationToken = await this._prisma.verificationToken.findUnique({
       where: { token },
       include: { user: true },
     });
@@ -231,7 +231,7 @@ export class AuthService {
     }
 
     // Update user status and mark token as used
-    await this.prisma.$transaction(async tx => {
+    await this._prisma.$transaction(async tx => {
       await tx.user.update({
         where: { id: verificationToken.userId! },
         data: { status: "ACTIVE" },
@@ -252,7 +252,7 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordRequest): Promise<MessageResponse> {
     const { email } = dto;
 
-    const user = await this.prisma.user.findUnique({
+    const user = await this._prisma.user.findUnique({
       where: { email },
     });
 
@@ -267,7 +267,7 @@ export class AuthService {
     // Generate reset token
     const resetToken = crypto.randomUUID();
 
-    await this.prisma.verificationToken.create({
+    await this._prisma.verificationToken.create({
       data: {
         userId: user.id,
         email: user.email,
@@ -278,7 +278,7 @@ export class AuthService {
     });
 
     // Send reset email
-    await this.emailService.sendPasswordReset(email, resetToken);
+    await this._emailService.sendPasswordReset(email, resetToken);
 
     return {
       message:
@@ -292,7 +292,7 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordRequest): Promise<MessageResponse> {
     const { token, password } = dto;
 
-    const verificationToken = await this.prisma.verificationToken.findUnique({
+    const verificationToken = await this._prisma.verificationToken.findUnique({
       where: { token },
       include: { user: true },
     });
@@ -312,7 +312,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Update password and mark token as used
-    await this.prisma.$transaction(async tx => {
+    await this._prisma.$transaction(async tx => {
       await tx.user.update({
         where: { id: verificationToken.userId! },
         data: { password: hashedPassword },
@@ -337,7 +337,7 @@ export class AuthService {
    * Logout user (revoke refresh tokens)
    */
   async logout(userId: string): Promise<MessageResponse> {
-    await this.prisma.refreshToken.updateMany({
+    await this._prisma.refreshToken.updateMany({
       where: { userId },
       data: { revokedAt: new Date() },
     });
@@ -352,13 +352,13 @@ export class AuthService {
     payload: Omit<JwtPayload, "iat" | "exp">
   ): Promise<AuthTokens> {
     // Generate access token
-    const accessToken = await this.jwtService.signAsync(payload, {
+    const accessToken = await this._jwtService.signAsync(payload, {
       secret: this.jwtConfig.secret,
       expiresIn: this.jwtConfig.accessTokenExpiresIn,
     });
 
     // Generate refresh token
-    const refreshToken = await this.jwtService.signAsync(payload, {
+    const refreshToken = await this._jwtService.signAsync(payload, {
       secret: this.jwtConfig.refreshSecret,
       expiresIn: this.jwtConfig.refreshTokenExpiresIn,
     });
@@ -367,7 +367,7 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    await this.prisma.refreshToken.create({
+    await this._prisma.refreshToken.create({
       data: {
         userId: payload.sub,
         token: refreshToken,
