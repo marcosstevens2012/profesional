@@ -6,7 +6,7 @@ import { SearchService } from "./search.service";
 @ApiTags("Search")
 @Controller("search")
 export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
+  constructor(private readonly _searchService: SearchService) {}
 
   @Get()
   @Public()
@@ -25,7 +25,7 @@ export class SearchController {
     @Query("location") location?: string,
     @Query("category") category?: string
   ) {
-    return this.searchService.search({ query, type, location, category });
+    return this._searchService.search({ query, type, location, category });
   }
 
   @Get("suggestions")
@@ -33,6 +33,6 @@ export class SearchController {
   @ApiOperation({ summary: "Get search suggestions" })
   @ApiQuery({ name: "q", required: true })
   getSuggestions(@Query("q") query: string) {
-    return this.searchService.getSuggestions(query);
+    return this._searchService.getSuggestions(query);
   }
 }
