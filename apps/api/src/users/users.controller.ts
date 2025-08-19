@@ -13,7 +13,11 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import type { CreateUser, UpdateUser, User } from "@profesional/contracts";
+import type {
+  CreateUserDTO,
+  UpdateUserDTO,
+  User,
+} from "@profesional/contracts";
 import { Role, Roles } from "../common";
 import { UsersService } from "./users.service";
 
@@ -27,7 +31,7 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: "Create a new user (Admin only)" })
   @ApiResponse({ status: 201, description: "User created successfully" })
-  create(@Body() createUserDto: CreateUser): User {
+  create(@Body() createUserDto: CreateUserDTO): User {
     return this.usersService.create(createUserDto);
   }
 
@@ -53,7 +57,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: "User not found" })
   update(
     @Param("id") id: string,
-    @Body() updateUserDto: UpdateUser
+    @Body() updateUserDto: UpdateUserDTO
   ): User | null {
     return this.usersService.update(id, updateUserDto);
   }

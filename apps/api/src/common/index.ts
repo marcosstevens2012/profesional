@@ -4,3 +4,4 @@ export * from "./filters/http-exception.filter";
 export * from "./guards/jwt-auth.guard";
 export * from "./guards/roles.guard";
 export * from "./middleware/request-id.middleware";
+export * from "./pipes/zod-validation.pipe";

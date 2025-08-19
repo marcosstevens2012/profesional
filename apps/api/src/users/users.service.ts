@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import type { CreateUser, UpdateUser, User } from "@profesional/contracts";
+import type {
+  CreateUserDTO,
+  UpdateUserDTO,
+  User,
+} from "@profesional/contracts";
 
 @Injectable()
 export class UsersService {
@@ -8,6 +12,8 @@ export class UsersService {
       id: "1",
       email: "john@example.com",
       name: "John Doe",
+      isActive: true,
+      role: "client",
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
     },
@@ -15,15 +21,18 @@ export class UsersService {
       id: "2",
       email: "jane@example.com",
       name: "Jane Smith",
+      isActive: true,
+      role: "professional",
       createdAt: new Date("2024-01-02"),
       updatedAt: new Date("2024-01-02"),
     },
   ];
 
-  create(createUserDto: CreateUser): User {
+  create(createUserDto: CreateUserDTO): User {
     const newUser: User = {
       id: (this.users.length + 1).toString(),
       ...createUserDto,
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -39,7 +48,7 @@ export class UsersService {
     return this.users.find(user => user.id === id) || null;
   }
 
-  update(id: string, updateUserDto: UpdateUser): User | null {
+  update(id: string, updateUserDto: UpdateUserDTO): User | null {
     const userIndex = this.users.findIndex(user => user.id === id);
     if (userIndex === -1) {
       return null;
