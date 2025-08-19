@@ -18,7 +18,7 @@ export class BookingsController {
   constructor(private readonly _bookingsService: BookingsService) {}
 
   @Post()
-  @Roles(Role.CUSTOMER)
+  @Roles(Role.CLIENT)
   @ApiOperation({ summary: "Create booking request" })
   create(@Body() createBookingDto: any) {
     return this._bookingsService.create(createBookingDto);

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { EmailConfig } from "../config/email.config";
+import { EmailConfig } from "../../config/email.config";
 
 export interface SendEmailParams {
   to: string;

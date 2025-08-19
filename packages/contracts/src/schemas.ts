@@ -80,20 +80,20 @@ export const AuthTokensSchema = z.object({
   expiresIn: z.number(),
 });
 
-export const AuthResponseSchema = z.object({
-  user: UserViewSchema,
-  tokens: AuthTokensSchema,
-});
-
-export const MessageResponseSchema = z.object({
-  message: z.string(),
-});
-
 // Auth user schema (with role enum)
 export const AuthUserSchema = UserSchema.extend({
   status: z
     .enum(["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING_VERIFICATION"])
     .default("PENDING_VERIFICATION"),
+});
+
+export const AuthResponseSchema = z.object({
+  user: AuthUserSchema,
+  tokens: AuthTokensSchema,
+});
+
+export const MessageResponseSchema = z.object({
+  message: z.string(),
 });
 
 // ===== PROFILE SCHEMAS =====

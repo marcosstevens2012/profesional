@@ -136,7 +136,10 @@ export function useAuth() {
 
     const checkTokenExpiry = () => {
       try {
-        const payload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
+        const parts = tokens.accessToken.split(".");
+        if (parts.length !== 3 || !parts[1]) return;
+
+        const payload = JSON.parse(atob(parts[1]));
         const expiry = payload.exp * 1000; // Convert to milliseconds
         const timeToExpiry = expiry - Date.now();
 

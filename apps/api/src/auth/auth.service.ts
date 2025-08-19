@@ -108,7 +108,8 @@ export class AuthService {
         isActive: user.status === "ACTIVE",
         role: user.role.toLowerCase() as any,
         createdAt: user.createdAt,
-        profile: user.profile,
+        updatedAt: user.updatedAt,
+        status: user.status,
       },
       tokens,
     };
@@ -157,7 +158,8 @@ export class AuthService {
         isActive: user.status === "ACTIVE",
         role: user.role.toLowerCase() as any,
         createdAt: user.createdAt,
-        profile: user.profile,
+        updatedAt: user.updatedAt,
+        status: user.status,
       },
       tokens,
     };

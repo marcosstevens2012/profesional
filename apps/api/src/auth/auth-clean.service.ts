@@ -32,7 +32,7 @@ export class AuthService {
         id: "3",
         email: "user@test.com",
         name: "Customer User",
-        roles: [Role.CUSTOMER],
+        roles: [Role.CLIENT],
       };
     }
 
@@ -44,7 +44,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       name: user.name,
-      roles: user.roles || [Role.CUSTOMER],
+      roles: user.roles || [Role.CLIENT],
     };
 
     return {
