@@ -1,3 +1,6 @@
 module.exports = {
-  extends: ["@profesional/config/eslint/base"]
+  extends: ["@typescript-eslint/recommended"],
+  parser: "@typescript-eslint/parser",
+  plugins: ["@typescript-eslint"],
+  root: true
 };

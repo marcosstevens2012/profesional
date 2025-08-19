@@ -1,4 +1,11 @@
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@profesional/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@profesional/ui";
 import type { User } from "@profesional/contracts";
 
 export default function HomePage() {
@@ -51,9 +58,7 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
-                La API incluye:
-              </p>
+              <p className="text-sm text-gray-600 mb-4">La API incluye:</p>
               <ul className="text-sm space-y-2">
                 <li>• NestJS con decoradores</li>
                 <li>• Validación con Zod</li>
@@ -73,14 +78,20 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>ID:</strong> {user.id}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Nombre:</strong> {user.name}</p>
-              <p><strong>Creado:</strong> {user.createdAt.toLocaleDateString()}</p>
+              <p>
+                <strong>ID:</strong> {user.id}
+              </p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
+              <p>
+                <strong>Nombre:</strong> {user.name}
+              </p>
+              <p>
+                <strong>Creado:</strong> {user.createdAt.toLocaleDateString()}
+              </p>
             </div>
-            <Button className="mt-4">
-              Acción de Ejemplo
-            </Button>
+            <Button className="mt-4">Acción de Ejemplo</Button>
           </CardContent>
         </Card>
       </div>

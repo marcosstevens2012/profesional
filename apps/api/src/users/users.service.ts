@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import type { CreateUser, UpdateUser, User } from '@profesional/contracts';
+import { Injectable } from "@nestjs/common";
+import type { CreateUser, UpdateUser, User } from "@profesional/contracts";
 
 @Injectable()
 export class UsersService {
   private users: User[] = [
     {
-      id: '1',
-      email: 'john@example.com',
-      name: 'John Doe',
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
+      id: "1",
+      email: "john@example.com",
+      name: "John Doe",
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
     },
     {
-      id: '2',
-      email: 'jane@example.com',
-      name: 'Jane Smith',
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-01-02'),
+      id: "2",
+      email: "jane@example.com",
+      name: "Jane Smith",
+      createdAt: new Date("2024-01-02"),
+      updatedAt: new Date("2024-01-02"),
     },
   ];
 

@@ -8,9 +8,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <div className="min-h-screen bg-background">
-          {children}
-        </div>
+        <div className="min-h-screen bg-background">{children}</div>
       </body>
     </html>
   );

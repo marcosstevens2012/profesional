@@ -1,3 +1,3 @@
 module.exports = {
-  extends: ["@profesional/config/eslint/next"]
+  extends: ["next/core-web-vitals"],
 };
