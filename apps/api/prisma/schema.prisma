@@ -1,0 +1,384 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== CORE MODELS ==========
+
+enum UserRole {
+  CLIENT
+  PROFESSIONAL
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  role      UserRole
+  status    UserStatus @default(PENDING_VERIFICATION)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  // Relations
+  profile           Profile?
+  professionalProfile ProfessionalProfile?
+  bookingsAsClient    Booking[] @relation("ClientBookings")
+  sentMessages      Message[]
+  reviews           Review[]
+  notifications     Notification[]
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Profile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  firstName String
+  lastName  String
+  avatar    String? // URL to avatar image
+  phone     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model ServiceCategory {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  order       Int     @default(0)
+  brandId     String? // Para futuro white-label
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  professionals ProfessionalProfile[]
+
+  @@index([slug])
+  @@index([brandId])
+  @@map("service_categories")
+}
+
+model Location {
+  id        String @id @default(cuid())
+  province  String
+  city      String
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professionals ProfessionalProfile[]
+
+  @@index([province, city])
+  @@map("locations")
+}
+
+model ProfessionalProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  bio               String?  // Bio corta
+  description       String?  // Descripción larga
+  pricePerSession   Decimal  @db.Decimal(10,2)
+  standardDuration  Int      // Duración en minutos
+  serviceCategoryId String
+  tags              String[] // Array de tags
+  locationId        String
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
+  isVerified        Boolean  @default(false)
+  brandId           String?  // Para futuro white-label
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceCategory ServiceCategory @relation(fields: [serviceCategoryId], references: [id])
+  location        Location        @relation(fields: [locationId], references: [id])
+  availabilitySlots AvailabilitySlot[]
+  bookings        Booking[]
+  reviews         Review[]
+
+  @@index([serviceCategoryId])
+  @@index([locationId])
+  @@index([isVerified])
+  @@index([rating])
+  @@index([tags])
+  @@index([brandId])
+  @@map("professional_profiles")
+}
+
+enum SlotType {
+  RECURRING
+  ONE_TIME
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model AvailabilitySlot {
+  id             String    @id @default(cuid())
+  professionalId String
+  type           SlotType
+
+  // Para slots recurrentes
+  dayOfWeek      DayOfWeek?
+  startTime      String?   // HH:mm format
+  endTime        String?   // HH:mm format
+
+  // Para slots específicos
+  specificDate   DateTime?
+  specificStart  DateTime?
+  specificEnd    DateTime?
+
+  isActive       Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([type])
+  @@index([dayOfWeek])
+  @@index([specificDate])
+  @@map("availability_slots")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  clientId       String
+  professionalId String
+
+  scheduledAt    DateTime
+  duration       Int           // Duración en minutos
+  status         BookingStatus @default(PENDING)
+  total          Decimal       @db.Decimal(10,2)
+  currency       String        @default("ARS")
+
+  paymentId      String?       @unique
+  jitsiRoom      String?       // Sala de videollamada
+  cancellationReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client       User                @relation("ClientBookings", fields: [clientId], references: [id])
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id])
+  payment      Payment?            @relation(fields: [paymentId], references: [id])
+  conversation Conversation?
+  review       Review?
+
+  @@index([clientId])
+  @@index([professionalId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([createdAt])
+  @@map("bookings")
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  AUTHORIZED
+  IN_PROCESS
+  IN_MEDIATION
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGED_BACK
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  provider     String        @default("MERCADOPAGO") // MP
+  preferenceId String?       // MP preference ID
+  paymentId    String?       // MP payment ID
+  status       PaymentStatus @default(PENDING)
+  amount       Decimal       @db.Decimal(10,2)
+  fee          Decimal       @default(0) @db.Decimal(10,2)
+  netAmount    Decimal       @db.Decimal(10,2)
+  currency     String        @default("ARS")
+  payerEmail   String?
+  metadata     Json?         // Metadata adicional (bookingId, etc.)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking?
+  events  PaymentEvent[]
+
+  @@index([provider])
+  @@index([paymentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  paymentId       String
+  type            String   // webhook type
+  rawPayload      Json     // Raw webhook payload
+  idempotencyKey  String   @unique
+  processedAt     DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([type])
+  @@index([idempotencyKey])
+  @@map("payment_events")
+}
+
+model Conversation {
+  id        String @id @default(cuid())
+  bookingId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking  Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("conversations")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType @default(TEXT)
+  attachments    Json?       // Array de attachments
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Review {
+  id             String  @id @default(cuid())
+  bookingId      String  @unique
+  clientId       String
+  professionalId String
+  rating         Int     // 1-5
+  comment        String?
+  visible        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking      Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  client       User                @relation(fields: [clientId], references: [id])
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id])
+
+  @@index([professionalId])
+  @@index([rating])
+  @@index([visible])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  PAYMENT_RECEIVED
+  REVIEW_RECEIVED
+  MESSAGE_RECEIVED
+  SYSTEM_NOTIFICATION
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  payload Json?            // Datos adicionales
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model CommissionRule {
+  id          String  @id @default(cuid())
+  brandId     String? // Para futuro white-label
+  percentage  Float   @default(0) // Porcentaje de comisión
+  fixedFee    Decimal @default(0) @db.Decimal(10,2) // Fee fijo
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([isActive])
+  @@map("commission_rules")
+}

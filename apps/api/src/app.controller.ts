@@ -6,13 +6,13 @@ import { Public } from "./common";
 @ApiTags("app")
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly _appService: AppService) {}
 
   @Get()
   @Public()
   @ApiOperation({ summary: "API welcome message" })
   @ApiResponse({ status: 200, description: "API is working correctly" })
   getHello(): string {
-    return this.appService.getHello();
+    return this._appService.getHello();
   }
 }

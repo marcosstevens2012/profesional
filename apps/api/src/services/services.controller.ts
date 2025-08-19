@@ -20,13 +20,13 @@ import { ServicesService } from "./services.service";
 @ApiTags("Services")
 @Controller("services")
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly _servicesService: ServicesService) {}
 
   @Get("categories")
   @Public()
   @ApiOperation({ summary: "Get all service categories" })
   getCategories() {
-    return this.servicesService.getCategories();
+    return this._servicesService.getCategories();
   }
 
   @Post()
@@ -34,7 +34,7 @@ export class ServicesController {
   @Roles(Role.PROFESSIONAL)
   @ApiOperation({ summary: "Create service offering" })
   create(@Body() createServiceDto: any) {
-    return this.servicesService.create(createServiceDto);
+    return this._servicesService.create(createServiceDto);
   }
 
   @Get()
@@ -48,14 +48,14 @@ export class ServicesController {
     @Query("location") location?: string,
     @Query("q") query?: string
   ) {
-    return this.servicesService.findAll({ category, location, query });
+    return this._servicesService.findAll({ category, location, query });
   }
 
   @Get(":id")
   @Public()
   @ApiOperation({ summary: "Get service by ID" })
   findOne(@Param("id") id: string) {
-    return this.servicesService.findOne(id);
+    return this._servicesService.findOne(id);
   }
 
   @Patch(":id")
@@ -63,7 +63,7 @@ export class ServicesController {
   @Roles(Role.PROFESSIONAL)
   @ApiOperation({ summary: "Update service" })
   update(@Param("id") id: string, @Body() updateServiceDto: any) {
-    return this.servicesService.update(id, updateServiceDto);
+    return this._servicesService.update(id, updateServiceDto);
   }
 
   @Delete(":id")
@@ -71,6 +71,6 @@ export class ServicesController {
   @Roles(Role.PROFESSIONAL, Role.ADMIN)
   @ApiOperation({ summary: "Delete service" })
   remove(@Param("id") id: string) {
-    return this.servicesService.remove(id);
+    return this._servicesService.remove(id);
   }
 }

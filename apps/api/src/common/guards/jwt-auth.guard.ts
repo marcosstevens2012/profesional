@@ -7,12 +7,12 @@ import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly reflector: Reflector
+    private readonly _jwtService: JwtService,
+    private readonly _reflector: Reflector
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+    const isPublic = this._reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -29,7 +29,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = this.jwtService.verify(token);
+      const payload = this._jwtService.verify(token);
       request["user"] = payload;
       return true;
     } catch {

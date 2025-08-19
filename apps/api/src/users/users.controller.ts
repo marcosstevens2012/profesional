@@ -25,14 +25,14 @@ import { UsersService } from "./users.service";
 @ApiBearerAuth()
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly _usersService: UsersService) {}
 
   @Post()
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: "Create a new user (Admin only)" })
   @ApiResponse({ status: 201, description: "User created successfully" })
   create(@Body() createUserDto: CreateUserDTO): User {
-    return this.usersService.create(createUserDto);
+    return this._usersService.create(createUserDto);
   }
 
   @Get()
@@ -40,7 +40,7 @@ export class UsersController {
   @ApiOperation({ summary: "Get all users (Admin only)" })
   @ApiResponse({ status: 200, description: "List of users" })
   findAll(): User[] {
-    return this.usersService.findAll();
+    return this._usersService.findAll();
   }
 
   @Get(":id")
@@ -48,7 +48,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "User found" })
   @ApiResponse({ status: 404, description: "User not found" })
   findOne(@Param("id") id: string): User | null {
-    return this.usersService.findOne(id);
+    return this._usersService.findOne(id);
   }
 
   @Patch(":id")
@@ -59,7 +59,7 @@ export class UsersController {
     @Param("id") id: string,
     @Body() updateUserDto: UpdateUserDTO
   ): User | null {
-    return this.usersService.update(id, updateUserDto);
+    return this._usersService.update(id, updateUserDto);
   }
 
   @Delete(":id")
@@ -68,6 +68,6 @@ export class UsersController {
   @ApiResponse({ status: 200, description: "User deleted successfully" })
   @ApiResponse({ status: 404, description: "User not found" })
   remove(@Param("id") id: string): { success: boolean } {
-    return this.usersService.remove(id);
+    return this._usersService.remove(id);
   }
 }

@@ -6,14 +6,14 @@ import { Public } from "../common";
 @ApiTags("Health")
 @Controller("health")
 export class HealthController {
-  constructor(private readonly health: HealthCheckService) {}
+  constructor(private readonly _health: HealthCheckService) {}
 
   @Get()
   @Public()
   @HealthCheck()
   @ApiOperation({ summary: "Health check endpoint" })
   check() {
-    return this.health.check([
+    return this._health.check([
       // Add more health checks as needed (database, redis, etc.)
     ]);
   }

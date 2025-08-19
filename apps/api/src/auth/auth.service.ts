@@ -4,7 +4,7 @@ import { Role } from "../common";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly _jwtService: JwtService) {}
 
   async validateUser(email: string, password: string): Promise<any> {
     // TODO: Implement actual user validation with database
@@ -48,7 +48,7 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this._jwtService.sign(payload),
       user: {
         id: user.id,
         email: user.email,
