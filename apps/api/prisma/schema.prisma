@@ -44,6 +44,8 @@ model User {
   sentMessages      Message[]
   reviews           Review[]
   notifications     Notification[]
+  verificationTokens VerificationToken[]
+  refreshTokens     RefreshToken[]
 
   @@index([email])
   @@index([status])
@@ -381,4 +383,49 @@ model CommissionRule {
   @@index([brandId])
   @@index([isActive])
   @@map("commission_rules")
+}
+
+// ========== AUTH TOKENS ==========
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  REFRESH_TOKEN
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String?
+  email     String?   // Para reset password sin userId
+  token     String    @unique
+  type      TokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([type])
+  @@index([email])
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }

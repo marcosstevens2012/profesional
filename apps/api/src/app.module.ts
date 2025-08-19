@@ -7,11 +7,14 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { HttpExceptionFilter, JwtAuthGuard, RolesGuard } from "./common";
 import { validateEnv } from "./config";
+import emailConfig from "./config/email.config";
+import jwtConfig from "./config/jwt.config";
 
 // Feature modules
 import { AdminModule } from "./admin/admin.module";
 import { AuthModule } from "./auth/auth.module";
 import { BookingsModule } from "./bookings/bookings.module";
+import { DatabaseModule } from "./database/database.module";
 import { ExamplesModule } from "./examples/examples.module";
 import { HealthModule } from "./health/health.module";
 import { ProfilesModule } from "./profiles/profiles.module";
@@ -26,6 +29,7 @@ import { UsersModule } from "./users/users.module";
       isGlobal: true,
       validate: validateEnv,
       envFilePath: [".env.local", ".env"],
+      load: [jwtConfig, emailConfig],
     }),
 
     // Rate limiting
@@ -63,6 +67,7 @@ import { UsersModule } from "./users/users.module";
     }),
 
     // Feature modules
+    DatabaseModule,
     HealthModule,
     AuthModule,
     UsersModule,

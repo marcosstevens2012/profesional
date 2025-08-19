@@ -1,37 +1,95 @@
-import { Body, Controller, Post, UnauthorizedException } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { IsEmail, IsString, MinLength } from "class-validator";
-import { Public } from "../common";
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import {
+  AuthResponse,
+  AuthTokens,
+  ForgotPasswordRequest,
+  LoginRequest,
+  MessageResponse,
+  RefreshTokenRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+  VerifyEmailRequest,
+} from "@profesional/contracts";
+import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { Public } from "../common/decorators/public.decorator";
+import { JwtAuthGuard, JwtPayload } from "../common/guards/jwt-auth.guard";
 import { AuthService } from "./auth.service";
-
-export class LoginDto {
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  @MinLength(6)
-  password!: string;
-}
 
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly _authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @Post("login")
   @Public()
-  @ApiOperation({ summary: "User login" })
-  @ApiBody({ type: LoginDto })
-  async login(@Body() loginDto: LoginDto) {
-    const user = await this._authService.validateUser(
-      loginDto.email,
-      loginDto.password
-    );
+  @Post("register")
+  async register(@Body() dto: RegisterRequest): Promise<AuthResponse> {
+    return this.authService.register(dto);
+  }
 
-    if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
-    }
+  @Public()
+  @Post("login")
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginRequest): Promise<AuthResponse> {
+    return this.authService.login(dto);
+  }
 
-    return this._authService.login(user);
+  @Public()
+  @Post("refresh")
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body() dto: RefreshTokenRequest): Promise<AuthTokens> {
+    return this.authService.refreshToken(dto);
+  }
+
+  @Public()
+  @Post("verify-email")
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body() dto: VerifyEmailRequest): Promise<MessageResponse> {
+    return this.authService.verifyEmail(dto);
+  }
+
+  @Public()
+  @Post("forgot-password")
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() dto: ForgotPasswordRequest
+  ): Promise<MessageResponse> {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Public()
+  @Post("reset-password")
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() dto: ResetPasswordRequest
+  ): Promise<MessageResponse> {
+    return this.authService.resetPassword(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("logout")
+  @HttpCode(HttpStatus.OK)
+  async logout(@CurrentUser() user: JwtPayload): Promise<MessageResponse> {
+    return this.authService.logout(user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("me")
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@CurrentUser() user: JwtPayload) {
+    return {
+      user: {
+        id: user.sub,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 }

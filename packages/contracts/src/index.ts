@@ -8,6 +8,10 @@ export * from "./schemas";
 export {
   // API utilities
   ApiResponseSchema,
+  // Auth related
+  AuthResponseSchema,
+  AuthTokensSchema,
+  AuthUserSchema,
   // Booking related
   BookingSchema,
   BookingStatusEnum,
@@ -16,7 +20,10 @@ export {
   CreatePaymentSchema,
   CreateProfessionalProfileSchema,
   CreateUserSchema,
+  ForgotPasswordRequestSchema,
   HealthCheckSchema,
+  LoginRequestSchema,
+  MessageResponseSchema,
   PaginatedResponseSchema,
   // Payment related
   PaymentSchema,
@@ -24,6 +31,9 @@ export {
   // Professional related
   ProfessionalProfileSchema,
   ProfessionalProfileViewSchema,
+  RefreshTokenRequestSchema,
+  RegisterRequestSchema,
+  ResetPasswordRequestSchema,
   SearchFiltersSchema,
   UpdateBookingSchema,
   UpdatePaymentSchema,
@@ -32,7 +42,11 @@ export {
   // User related
   UserSchema,
   UserViewSchema,
+  VerifyEmailRequestSchema,
   type ApiResponse,
+  type AuthResponse,
+  type AuthTokens,
+  type AuthUser,
   type Booking,
   type BookingStatus,
   type BookingView,
@@ -40,12 +54,18 @@ export {
   type CreatePaymentDTO,
   type CreateProfessionalProfileDTO,
   type CreateUserDTO,
+  type ForgotPasswordRequest,
   type HealthCheck,
+  type LoginRequest,
+  type MessageResponse,
   type PaginatedResponse,
   type Payment,
   type PaymentStatus,
   type ProfessionalProfile,
   type ProfessionalProfileView,
+  type RefreshTokenRequest,
+  type RegisterRequest,
+  type ResetPasswordRequest,
   type SearchFilters,
   type UpdateBookingDTO,
   type UpdatePaymentDTO,

@@ -2,14 +2,10 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
-// eslint-disable-next-line no-unused-vars
 export enum Role {
-  // eslint-disable-next-line no-unused-vars
   ADMIN = "admin",
-  // eslint-disable-next-line no-unused-vars
   PROFESSIONAL = "professional",
-  // eslint-disable-next-line no-unused-vars
-  CUSTOMER = "customer",
+  CLIENT = "client",
 }
 
 @Injectable()
@@ -27,6 +23,10 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role: string) => user.roles?.includes(role));
+    if (!user) {
+      return false;
+    }
+
+    return requiredRoles.includes(user.role as Role);
   }
 }

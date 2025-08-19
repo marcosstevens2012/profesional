@@ -41,6 +41,61 @@ export const UserViewSchema = UserSchema.omit({
   profile: z.any().optional(),
 });
 
+// ===== AUTH SCHEMAS =====
+
+// Register/Login DTOs
+export const RegisterRequestSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
+  name: z.string().min(1).max(100),
+  role: z.enum(["client", "professional"]).default("client"),
+});
+
+export const LoginRequestSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+export const RefreshTokenRequestSchema = z.object({
+  refreshToken: z.string(),
+});
+
+export const ForgotPasswordRequestSchema = z.object({
+  email: z.string().email(),
+});
+
+export const ResetPasswordRequestSchema = z.object({
+  token: z.string(),
+  password: z.string().min(8).max(100),
+});
+
+export const VerifyEmailRequestSchema = z.object({
+  token: z.string(),
+});
+
+// Auth response schemas
+export const AuthTokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  expiresIn: z.number(),
+});
+
+export const AuthResponseSchema = z.object({
+  user: UserViewSchema,
+  tokens: AuthTokensSchema,
+});
+
+export const MessageResponseSchema = z.object({
+  message: z.string(),
+});
+
+// Auth user schema (with role enum)
+export const AuthUserSchema = UserSchema.extend({
+  status: z
+    .enum(["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING_VERIFICATION"])
+    .default("PENDING_VERIFICATION"),
+});
+
 // ===== PROFILE SCHEMAS =====
 
 export const ProfileSchema = z
@@ -567,6 +622,18 @@ export type User = z.infer<typeof UserSchema>;
 export type CreateUserDTO = z.infer<typeof CreateUserSchema>;
 export type UpdateUserDTO = z.infer<typeof UpdateUserSchema>;
 export type UserView = z.infer<typeof UserViewSchema>;
+
+// Auth types
+export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+export type RefreshTokenRequest = z.infer<typeof RefreshTokenRequestSchema>;
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;
+export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+export type AuthTokens = z.infer<typeof AuthTokensSchema>;
+export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type MessageResponse = z.infer<typeof MessageResponseSchema>;
+export type AuthUser = z.infer<typeof AuthUserSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema>;
 export type CreateProfileDTO = z.infer<typeof CreateProfileSchema>;
