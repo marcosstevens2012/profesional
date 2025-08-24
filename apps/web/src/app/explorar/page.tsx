@@ -2,10 +2,13 @@
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Input } from "@/components/ui/input";
+import { FrontendProfessional } from "@/lib/adapters/professional-adapter";
 import { useSearchProfessionals } from "@/lib/hooks/use-search";
 import { useServiceCategories } from "@/lib/hooks/use-services";
+import { formatLocation } from "@/lib/utils/location-utils";
 import { Button, Card, CardContent } from "@profesional/ui";
 import { Filter, MapPin, Search, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -123,96 +126,100 @@ export default function ExplorarPage() {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {professionals.data.map((professional: any) => (
-                  <Link
-                    key={professional.id}
-                    href={`/profesionales/${professional.slug || professional.id}`}
-                    className="block transition-transform hover:scale-105"
-                  >
-                    <Card className="h-full hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                            {professional.user?.avatarUrl ? (
-                              <img
-                                src={professional.user.avatarUrl}
-                                alt={professional.user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                                <span className="text-lg font-bold text-primary">
-                                  {professional.user?.name?.charAt(0) || "P"}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg truncate">
-                              {professional.user?.name}
-                            </h3>
-                            <p className="text-primary font-medium truncate">
-                              {professional.title}
-                            </p>
-
-                            <div className="flex items-center gap-1 mt-2">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm font-medium">
-                                {professional.rating}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                ({professional.reviewCount})
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                              <MapPin className="w-3 h-3" />
-                              <span className="truncate">
-                                {professional.location}
-                              </span>
-                            </div>
-
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                              {professional.description}
-                            </p>
-
-                            <div className="mt-3">
-                              <span className="text-lg font-bold">
-                                ${professional.hourlyRate?.toLocaleString()}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                /hora
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Skills */}
-                        {professional.skills &&
-                          professional.skills.length > 0 && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {professional.skills
-                                .slice(0, 3)
-                                .map((skill: string, index: number) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs"
-                                  >
-                                    {skill}
+                {professionals.data.map(
+                  (professional: FrontendProfessional) => (
+                    <Link
+                      key={professional.id}
+                      href={`/profesionales/${professional.slug || professional.id}`}
+                      className="block transition-transform hover:scale-105"
+                    >
+                      <Card className="h-full hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                              {professional.user?.avatarUrl ? (
+                                <Image
+                                  src={professional.user.avatarUrl}
+                                  alt={professional.user.name || "Professional"}
+                                  width={64}
+                                  height={64}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-lg font-bold text-primary">
+                                    {professional.user?.name?.charAt(0) || "P"}
                                   </span>
-                                ))}
-                              {professional.skills.length > 3 && (
-                                <span className="text-xs text-muted-foreground">
-                                  +{professional.skills.length - 3} más
-                                </span>
+                                </div>
                               )}
                             </div>
-                          )}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg truncate">
+                                {professional.user?.name}
+                              </h3>
+                              <p className="text-primary font-medium truncate">
+                                {professional.title}
+                              </p>
+
+                              <div className="flex items-center gap-1 mt-2">
+                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm font-medium">
+                                  {professional.rating}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  ({professional.reviewCount})
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                                <MapPin className="w-3 h-3" />
+                                <span className="truncate">
+                                  {formatLocation(professional.location)}
+                                </span>
+                              </div>
+
+                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                {professional.description}
+                              </p>
+
+                              <div className="mt-3">
+                                <span className="text-lg font-bold">
+                                  ${professional.hourlyRate?.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  /hora
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Skills */}
+                          {professional.skills &&
+                            professional.skills.length > 0 && (
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                {professional.skills
+                                  .slice(0, 3)
+                                  .map((skill: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                {professional.skills.length > 3 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    +{professional.skills.length - 3} más
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                )}
               </div>
 
               {/* Load More Button */}

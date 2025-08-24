@@ -2,15 +2,14 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/perfil", "/configuracion"];
-
-// Routes that should redirect to dashboard if user is authenticated
-const authRoutes = ["/ingresar", "/registro"];
+const protectedRoutes = ["/dashboard", "/perfil", "/configuracion", "/panel"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if user has auth tokens (simple check)
+  // Note: In middleware, we can't access localStorage directly,
+  // but we can check for a auth-storage cookie that would be set by the client
   const authStorage = request.cookies.get("auth-storage");
   let isAuthenticated = false;
 
@@ -24,7 +23,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // If trying to access protected route without auth, redirect to login
+  // For protected routes, if not authenticated, redirect to login
   if (
     protectedRoutes.some(route => pathname.startsWith(route)) &&
     !isAuthenticated
@@ -34,10 +33,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If trying to access auth routes while authenticated, redirect to dashboard
-  if (authRoutes.some(route => pathname.startsWith(route)) && isAuthenticated) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+  // For auth routes, if authenticated, redirect to panel
+  // But skip this check for now to avoid redirect loops
+  // TODO: Fix this properly with client-side navigation
 
   return NextResponse.next();
 }

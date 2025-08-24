@@ -1,9 +1,6 @@
-import {
-  PaginatedResponse,
-  ProfessionalProfile,
-  SearchFilters,
-} from "@profesional/contracts";
+import { PaginatedResponse, SearchFilters } from "@profesional/contracts";
 import { useQuery } from "@tanstack/react-query";
+import { FrontendProfessional } from "../adapters/professional-adapter";
 import { searchAPI, SearchSuggestion } from "../api/search";
 
 // Query keys
@@ -20,7 +17,7 @@ export function useSearchProfessionals(
   filters: SearchFilters,
   enabled: boolean = true
 ) {
-  return useQuery<PaginatedResponse<ProfessionalProfile>>({
+  return useQuery<PaginatedResponse<FrontendProfessional>>({
     queryKey: searchKeys.professionals(filters),
     queryFn: () => searchAPI.searchProfessionals(filters),
     enabled,

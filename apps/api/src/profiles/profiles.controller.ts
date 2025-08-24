@@ -11,8 +11,8 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { Public, Role, Roles } from "../common";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ProfilesService } from "./profiles.service";
 

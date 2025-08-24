@@ -2,6 +2,7 @@
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
+import { formatLocation } from "@/lib/utils/location-utils";
 import {
   Button,
   Card,
@@ -104,7 +105,7 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        {prof.location}
+                        {formatLocation(prof.location)}
                       </div>
                       <div className="flex items-center gap-1">
                         <MessageCircle className="h-4 w-4" />

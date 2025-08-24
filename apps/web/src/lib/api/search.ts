@@ -1,8 +1,8 @@
+import { PaginatedResponse, SearchFilters } from "@profesional/contracts";
 import {
-  PaginatedResponse,
-  ProfessionalProfile,
-  SearchFilters,
-} from "@profesional/contracts";
+  adaptPaginatedProfessionals,
+  FrontendProfessional,
+} from "../adapters/professional-adapter";
 
 // Tipo local para sugerencias de búsqueda
 export interface SearchSuggestion {
@@ -11,14 +11,14 @@ export interface SearchSuggestion {
   type: "professional" | "service" | "location";
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
 class SearchAPI {
   private baseUrl = `${API_BASE_URL}/search`;
 
   async searchProfessionals(
     filters: SearchFilters
-  ): Promise<PaginatedResponse<ProfessionalProfile>> {
+  ): Promise<PaginatedResponse<FrontendProfessional>> {
     const searchParams = new URLSearchParams();
 
     if (filters.query) searchParams.set("query", filters.query);
@@ -55,23 +55,8 @@ class SearchAPI {
 
     const result = await response.json();
 
-    // Return mock data if no real data is available
-    if (!result || !result.data) {
-      return {
-        success: true,
-        data: [],
-        pagination: {
-          page: filters.page || 1,
-          limit: filters.limit || 20,
-          total: 0,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
-    }
-
-    return result;
+    // Adapt backend response to frontend format
+    return adaptPaginatedProfessionals(result);
   }
 
   async getSuggestions(query: string): Promise<SearchSuggestion[]> {

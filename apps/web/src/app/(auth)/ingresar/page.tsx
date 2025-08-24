@@ -8,25 +8,35 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/auth-hooks";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      const callbackUrl = searchParams.get("callbackUrl") || "/panel";
+      router.replace(callbackUrl);
+    }
+  }, [user, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await login({ email, password });
-      const callbackUrl = searchParams.get("callbackUrl") || "/";
-      router.push(callbackUrl);
+      const response = await login({ email, password });
+      console.log("Login exitoso:", response);
+
+      // El redirect se manejará en el useEffect cuando user cambie
     } catch (err: any) {
+      console.error("Error en login:", err);
       setError(err.message || "Error al iniciar sesión");
     }
   };
