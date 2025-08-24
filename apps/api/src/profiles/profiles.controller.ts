@@ -6,9 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { Role, Roles } from "../common";
+import { Public, Role, Roles } from "../common";
 import { ProfilesService } from "./profiles.service";
 
 @ApiTags("Profiles")
@@ -25,12 +26,21 @@ export class ProfilesController {
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: "Get all profiles" })
-  findAll() {
-    return this._profilesService.findAll();
+  findAll(@Query() query: any) {
+    return this._profilesService.findAll(query);
+  }
+
+  @Get("slug/:slug")
+  @Public()
+  @ApiOperation({ summary: "Get profile by slug" })
+  findBySlug(@Param("slug") slug: string) {
+    return this._profilesService.findBySlug(slug);
   }
 
   @Get(":id")
+  @Public()
   @ApiOperation({ summary: "Get profile by ID" })
   findOne(@Param("id") id: string) {
     return this._profilesService.findOne(id);

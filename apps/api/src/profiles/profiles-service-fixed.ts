@@ -34,11 +34,13 @@ export class ProfilesService {
       reviewCount: 42,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 42,
-      portfolio: [],
-      certifications: [],
+      portfolio: [
+        "https://example.com/portfolio/ecommerce-platform",
+        "https://example.com/portfolio/task-management",
+      ],
+      certifications: ["AWS Certified", "React Professional"],
       languages: ["es", "en"],
       // Campos adicionales
       user: {
@@ -83,12 +85,14 @@ export class ProfilesService {
       reviewCount: 28,
       createdAt: new Date("2024-01-15"),
       updatedAt: new Date("2024-01-15"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 28,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
+      portfolio: [
+        "https://example.com/portfolio/mobile-banking-app",
+        "https://example.com/portfolio/elearning-platform",
+      ],
+      certifications: ["Google UX Design", "Figma Expert"],
+      languages: ["es", "en"],
       // Campos adicionales
       user: {
         name: "Ana Rodríguez",
@@ -126,12 +130,18 @@ export class ProfilesService {
       reviewCount: 67,
       createdAt: new Date("2024-02-01"),
       updatedAt: new Date("2024-02-01"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 67,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
+      portfolio: [
+        "https://example.com/portfolio/ecommerce-growth",
+        "https://example.com/portfolio/saas-lead-generation",
+      ],
+      certifications: [
+        "Google Ads Certified",
+        "Facebook Blueprint",
+        "HubSpot Certified",
+      ],
+      languages: ["es", "en", "pt"],
       // Campos adicionales
       user: {
         name: "Luis Fernández",

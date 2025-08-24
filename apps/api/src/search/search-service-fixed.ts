@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { PaginatedResponse, ProfessionalProfile } from "@profesional/contracts";
 
 @Injectable()
-export class ProfilesService {
-  // Mock data for testing
+export class SearchService {
+  // Mock data for testing - usando los mismos datos que ProfilesService
   private mockProfiles: Array<
     ProfessionalProfile & {
       user?: { name: string; avatarUrl?: string };
@@ -34,11 +34,13 @@ export class ProfilesService {
       reviewCount: 42,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 42,
-      portfolio: [],
-      certifications: [],
+      portfolio: [
+        "https://example.com/portfolio/ecommerce-platform",
+        "https://example.com/portfolio/task-management",
+      ],
+      certifications: ["AWS Certified", "React Professional"],
       languages: ["es", "en"],
       // Campos adicionales
       user: {
@@ -83,12 +85,14 @@ export class ProfilesService {
       reviewCount: 28,
       createdAt: new Date("2024-01-15"),
       updatedAt: new Date("2024-01-15"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 28,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
+      portfolio: [
+        "https://example.com/portfolio/mobile-banking-app",
+        "https://example.com/portfolio/elearning-platform",
+      ],
+      certifications: ["Google UX Design", "Figma Expert"],
+      languages: ["es", "en"],
       // Campos adicionales
       user: {
         name: "Ana Rodríguez",
@@ -126,12 +130,18 @@ export class ProfilesService {
       reviewCount: 67,
       createdAt: new Date("2024-02-01"),
       updatedAt: new Date("2024-02-01"),
-      // Propiedades requeridas
       isAvailable: true,
       completedBookings: 67,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
+      portfolio: [
+        "https://example.com/portfolio/ecommerce-growth",
+        "https://example.com/portfolio/saas-lead-generation",
+      ],
+      certifications: [
+        "Google Ads Certified",
+        "Facebook Blueprint",
+        "HubSpot Certified",
+      ],
+      languages: ["es", "en", "pt"],
       // Campos adicionales
       user: {
         name: "Luis Fernández",
@@ -163,56 +173,86 @@ export class ProfilesService {
     },
   ];
 
-  create(createProfileDto: any) {
-    return { message: "Profile created", data: createProfileDto };
-  }
-
-  async findAll(
-    query: any = {}
+  async search(
+    filters: any = {}
   ): Promise<PaginatedResponse<ProfessionalProfile>> {
     let filteredProfiles = [...this.mockProfiles];
 
     // Apply filters
-    if (query.category) {
+    if (filters.query) {
+      const query = filters.query.toLowerCase();
+      filteredProfiles = filteredProfiles.filter(
+        profile =>
+          profile.title.toLowerCase().includes(query) ||
+          profile.description.toLowerCase().includes(query) ||
+          profile.skills?.some(skill => skill.toLowerCase().includes(query))
+      );
+    }
+
+    if (filters.category) {
       filteredProfiles = filteredProfiles.filter(profile =>
-        profile.title.toLowerCase().includes(query.category.toLowerCase())
+        profile.title.toLowerCase().includes(filters.category.toLowerCase())
       );
     }
 
-    if (query.location) {
+    if (filters.location) {
       filteredProfiles = filteredProfiles.filter(profile =>
-        profile.location?.toLowerCase().includes(query.location.toLowerCase())
+        profile.location?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
-    if (query.minRate) {
+    if (filters.minRate) {
       filteredProfiles = filteredProfiles.filter(
-        profile => profile.hourlyRate >= parseInt(query.minRate)
+        profile => profile.hourlyRate >= parseInt(filters.minRate)
       );
     }
 
-    if (query.maxRate) {
+    if (filters.maxRate) {
       filteredProfiles = filteredProfiles.filter(
-        profile => profile.hourlyRate <= parseInt(query.maxRate)
+        profile => profile.hourlyRate <= parseInt(filters.maxRate)
       );
     }
 
-    if (query.rating) {
+    if (filters.rating) {
       filteredProfiles = filteredProfiles.filter(
-        profile => profile.rating >= parseFloat(query.rating)
+        profile => profile.rating >= parseFloat(filters.rating)
       );
     }
 
-    if (query.isVerified !== undefined) {
-      const isVerified = query.isVerified === "true";
+    if (filters.isVerified !== undefined) {
+      const isVerified = filters.isVerified === "true";
       filteredProfiles = filteredProfiles.filter(
         profile => profile.isVerified === isVerified
       );
     }
 
+    // Sorting
+    if (filters.sortBy) {
+      switch (filters.sortBy) {
+        case "rating":
+          filteredProfiles.sort((a, b) => b.rating - a.rating);
+          break;
+        case "price_low":
+          filteredProfiles.sort((a, b) => a.hourlyRate - b.hourlyRate);
+          break;
+        case "price_high":
+          filteredProfiles.sort((a, b) => b.hourlyRate - a.hourlyRate);
+          break;
+        case "newest":
+          filteredProfiles.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          break;
+        default: // relevance
+          // Keep original order for relevance
+          break;
+      }
+    }
+
     // Pagination
-    const page = parseInt(query.page) || 1;
-    const limit = parseInt(query.limit) || 20;
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 20;
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
 
@@ -233,21 +273,40 @@ export class ProfilesService {
     };
   }
 
-  async findOne(id: string): Promise<ProfessionalProfile | null> {
-    const profile = this.mockProfiles.find(p => p.id === id);
-    return profile || null;
-  }
+  async getSuggestions(query: string): Promise<string[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
 
-  async findBySlug(slug: string): Promise<ProfessionalProfile | null> {
-    const profile = this.mockProfiles.find(p => p.slug === slug);
-    return profile || null;
-  }
+    const suggestions = new Set<string>();
+    const queryLower = query.toLowerCase();
 
-  update(id: string, updateProfileDto: any) {
-    return { message: `Profile #${id} updated`, data: updateProfileDto };
-  }
+    // Search in titles, skills, and locations
+    this.mockProfiles.forEach(profile => {
+      // Add titles
+      if (profile.title.toLowerCase().includes(queryLower)) {
+        suggestions.add(profile.title);
+      }
 
-  remove(id: string) {
-    return { message: `Profile #${id} deleted` };
+      // Add skills
+      profile.skills?.forEach(skill => {
+        if (skill.toLowerCase().includes(queryLower)) {
+          suggestions.add(skill);
+        }
+      });
+
+      // Add locations
+      if (profile.location?.toLowerCase().includes(queryLower)) {
+        const locationParts = profile.location.split(",");
+        locationParts.forEach(part => {
+          const trimmed = part.trim();
+          if (trimmed.toLowerCase().includes(queryLower)) {
+            suggestions.add(trimmed);
+          }
+        });
+      }
+    });
+
+    return Array.from(suggestions).slice(0, 10); // Return max 10 suggestions
   }
 }
