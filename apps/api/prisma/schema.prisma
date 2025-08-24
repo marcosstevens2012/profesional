@@ -29,6 +29,7 @@ model User {
   id        String     @id @default(cuid())
   email     String     @unique
   password  String
+  name      String?    // Nombre completo opcional
   role      UserRole
   status    UserStatus @default(PENDING_VERIFICATION)
 
@@ -109,6 +110,8 @@ model Location {
 model ProfessionalProfile {
   id                String   @id @default(cuid())
   userId            String   @unique
+  email             String?  // Email profesional (puede ser diferente al del User)
+  name              String?  // Nombre profesional
   bio               String?  // Bio corta
   description       String?  // Descripción larga
   pricePerSession   Decimal  @db.Decimal(10,2)
@@ -132,6 +135,7 @@ model ProfessionalProfile {
   bookings        Booking[]
   reviews         Review[]
 
+  @@index([email])
   @@index([serviceCategoryId])
   @@index([locationId])
   @@index([isVerified])
@@ -186,6 +190,7 @@ model AvailabilitySlot {
 }
 
 enum BookingStatus {
+  PENDING_PAYMENT
   PENDING
   CONFIRMED
   IN_PROGRESS
@@ -195,28 +200,26 @@ enum BookingStatus {
 }
 
 model Booking {
-  id             String        @id @default(cuid())
-  clientId       String
-  professionalId String
-
-  scheduledAt    DateTime
-  duration       Int           // Duración en minutos
-  status         BookingStatus @default(PENDING)
-  total          Decimal       @db.Decimal(10,2)
-  currency       String        @default("ARS")
-
-  paymentId      String?       @unique
-  jitsiRoom      String?       // Sala de videollamada
-  cancellationReason String?
+  id               String        @id @default(cuid())
+  clientId         String
+  professionalId   String
+  scheduledAt      DateTime
+  duration         Int           @default(60) // minutes
+  price            Decimal       @db.Decimal(10,2)
+  notes            String?       @db.Text
+  status           BookingStatus @default(PENDING_PAYMENT)
+  cancelledAt      DateTime?
+  cancellationReason String?     @db.Text
+  paymentId        String?       @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client       User                @relation("ClientBookings", fields: [clientId], references: [id])
-  professional ProfessionalProfile @relation(fields: [professionalId], references: [id])
-  payment      Payment?            @relation(fields: [paymentId], references: [id])
-  conversation Conversation?
-  review       Review?
+  client        User                @relation("ClientBookings", fields: [clientId], references: [id])
+  professional  ProfessionalProfile @relation(fields: [professionalId], references: [id])
+  conversation  Conversation?
+  payment       Payment?            @relation(fields: [paymentId], references: [id])
+  reviews       Review[]
 
   @@index([clientId])
   @@index([professionalId])
@@ -236,20 +239,26 @@ enum PaymentStatus {
   CANCELLED
   REFUNDED
   CHARGED_BACK
+  COMPLETED // Agregado para estado final exitoso
+  FAILED    // Agregado para estado final de fallo
 }
 
 model Payment {
-  id           String        @id @default(cuid())
-  provider     String        @default("MERCADOPAGO") // MP
-  preferenceId String?       // MP preference ID
-  paymentId    String?       // MP payment ID
-  status       PaymentStatus @default(PENDING)
-  amount       Decimal       @db.Decimal(10,2)
-  fee          Decimal       @default(0) @db.Decimal(10,2)
-  netAmount    Decimal       @db.Decimal(10,2)
-  currency     String        @default("ARS")
-  payerEmail   String?
-  metadata     Json?         // Metadata adicional (bookingId, etc.)
+  id                String        @id @default(cuid())
+  provider          String        @default("MERCADOPAGO") // MP
+  preferenceId      String?       // MP preference ID
+  paymentId         String?       // MP payment ID
+  gatewayPaymentId  String?       // ID externo del gateway (MP payment ID)
+  status            PaymentStatus @default(PENDING)
+  amount            Decimal       @db.Decimal(10,2)
+  fee               Decimal       @default(0) @db.Decimal(10,2)
+  gatewayFees       Decimal       @default(0) @db.Decimal(10,2) // Fees del gateway (MP)
+  platformFee       Decimal       @default(0) @db.Decimal(10,2) // Fee de la plataforma
+  netAmount         Decimal       @db.Decimal(10,2)
+  currency          String        @default("ARS")
+  payerEmail        String?
+  metadata          Json?         // Metadata adicional (bookingId, etc.)
+  paidAt            DateTime?     // Fecha de pago aprobado
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -259,6 +268,7 @@ model Payment {
 
   @@index([provider])
   @@index([paymentId])
+  @@index([gatewayPaymentId])
   @@index([status])
   @@index([createdAt])
   @@map("payments")
@@ -267,16 +277,22 @@ model Payment {
 model PaymentEvent {
   id              String   @id @default(cuid())
   paymentId       String
+  externalId      String?  // ID del evento externo (MP)
   type            String   // webhook type
+  status          String?  // Status del evento
   rawPayload      Json     // Raw webhook payload
   idempotencyKey  String   @unique
+  data            Json?    // Datos procesados del evento
   processedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   @@index([paymentId])
+  @@index([externalId])
   @@index([type])
   @@index([idempotencyKey])
+  @@index([createdAt])
   @@map("payment_events")
 }
 

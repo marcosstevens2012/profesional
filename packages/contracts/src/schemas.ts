@@ -374,6 +374,102 @@ export const UpdatePaymentSchema = z.object({
   paidAt: z.coerce.date().optional(),
 });
 
+// ===== MERCADO PAGO SCHEMAS =====
+
+export const MercadoPagoPreferenceSchema = z.object({
+  bookingId: IdSchema,
+  customerId: IdSchema,
+  professionalId: IdSchema,
+  amount: z.number().min(0),
+  description: z.string().max(500),
+  payerEmail: z.string().email().optional(),
+});
+
+export const MercadoPagoWebhookSchema = z.object({
+  id: z.string(),
+  live_mode: z.boolean(),
+  type: z.string(),
+  date_created: z.string(),
+  application_id: z.string(),
+  user_id: z.string(),
+  version: z.string(),
+  api_version: z.string(),
+  action: z.string(),
+  data: z.object({
+    id: z.string(),
+  }),
+});
+
+export const CommissionCalculationSchema = z.object({
+  amount: z.number().min(0),
+  commissionRate: z.number().min(0).max(100),
+  platformFee: z.number().min(0),
+  professionalNet: z.number().min(0),
+});
+
+// ===== MARKETPLACE PAYMENT SCHEMAS =====
+
+export const MarketplacePaymentItemSchema = z.object({
+  title: z.string().min(1).max(200),
+  quantity: z.number().min(1).default(1),
+  unit_price: z.number().min(0),
+  category_id: z.string().optional(),
+  description: z.string().max(500).optional(),
+});
+
+export const MarketplaceSplitSchema = z.object({
+  amount: z.number().min(0),
+  fee_amount: z.number().min(0),
+  collector: z.object({
+    id: z.number(), // User ID del profesional
+  }),
+});
+
+export const MarketplacePreferenceRequestSchema = z.object({
+  bookingId: IdSchema,
+  customerId: IdSchema,
+  professionalId: IdSchema,
+  professionalMPUserId: z.number(), // MP User ID del profesional
+  amount: z.number().min(0),
+  title: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  payerEmail: z.string().email().optional(),
+  platformCommissionRate: z.number().min(0).max(100).default(10), // % de comisión de plataforma
+  backUrls: z
+    .object({
+      success: z.string().url(),
+      failure: z.string().url(),
+      pending: z.string().url(),
+    })
+    .optional(),
+  autoReturn: z.enum(["approved", "all"]).default("approved").optional(),
+  maxInstallments: z.number().min(1).max(24).default(12).optional(),
+});
+
+export const MarketplacePreferenceResponseSchema = z.object({
+  id: z.string(),
+  init_point: z.string().url(),
+  sandbox_init_point: z.string().url(),
+  external_reference: z.string(),
+  collector_id: z.number(),
+  marketplace_fee: z.number(),
+  total_amount: z.number(),
+  professional_amount: z.number(),
+  platform_fee: z.number(),
+  preference_data: z.record(z.any()), // Respuesta completa de MP
+});
+
+export const TestCardPaymentSchema = z.object({
+  bookingId: IdSchema,
+  amount: z.number().min(0),
+  cardNumber: z.string().length(16), // "5031755734530604"
+  expirationMonth: z.string().length(2), // "11"
+  expirationYear: z.string().length(2), // "30"
+  cvv: z.string().length(3), // "123"
+  cardHolderName: z.string().min(1).max(100),
+  payerEmail: z.string().email().optional(),
+});
+
 // ===== PAYMENT EVENT SCHEMAS =====
 
 export const PaymentEventSchema = z
@@ -687,6 +783,28 @@ export type PaymentStatus = z.infer<typeof PaymentStatusEnum>;
 
 export type PaymentEvent = z.infer<typeof PaymentEventSchema>;
 export type CreatePaymentEventDTO = z.infer<typeof CreatePaymentEventSchema>;
+
+export type MercadoPagoPreferenceDTO = z.infer<
+  typeof MercadoPagoPreferenceSchema
+>;
+export type MercadoPagoWebhookDTO = z.infer<typeof MercadoPagoWebhookSchema>;
+export type CommissionCalculationDTO = z.infer<
+  typeof CommissionCalculationSchema
+>;
+
+// ===== MARKETPLACE TYPES =====
+
+export type MarketplacePaymentItem = z.infer<
+  typeof MarketplacePaymentItemSchema
+>;
+export type MarketplaceSplit = z.infer<typeof MarketplaceSplitSchema>;
+export type MarketplacePreferenceRequest = z.infer<
+  typeof MarketplacePreferenceRequestSchema
+>;
+export type MarketplacePreferenceResponse = z.infer<
+  typeof MarketplacePreferenceResponseSchema
+>;
+export type TestCardPayment = z.infer<typeof TestCardPaymentSchema>;
 
 export type Conversation = z.infer<typeof ConversationSchema>;
 export type CreateConversationDTO = z.infer<typeof CreateConversationSchema>;

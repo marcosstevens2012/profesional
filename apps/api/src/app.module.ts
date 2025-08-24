@@ -17,6 +17,7 @@ import { BookingsModule } from "./bookings/bookings.module";
 import { DatabaseModule } from "./database/database.module";
 import { ExamplesModule } from "./examples/examples.module";
 import { HealthModule } from "./health/health.module";
+import { PaymentsModule } from "./payments/payments.module";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { SearchModule } from "./search/search.module";
 import { ServicesModule } from "./services/services.module";
@@ -74,6 +75,7 @@ import { UsersModule } from "./users/users.module";
     ProfilesModule,
     ServicesModule,
     SearchModule,
+    PaymentsModule,
     BookingsModule,
     ExamplesModule,
     AdminModule,
