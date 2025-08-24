@@ -43,6 +43,7 @@ model User {
   professionalProfile ProfessionalProfile?
   bookingsAsClient    Booking[] @relation("ClientBookings")
   sentMessages      Message[]
+  attachments       Attachment[] // Adjuntos subidos por este usuario
   reviews           Review[]
   notifications     Notification[]
   verificationTokens VerificationToken[]
@@ -313,25 +314,74 @@ enum MessageType {
   TEXT
   IMAGE
   FILE
+  SYSTEM // Para mensajes automáticos del sistema
+}
+
+enum AttachmentAccessLevel {
+  PRIVATE  // Solo participantes del booking
+  RESTRICTED // Con autorización adicional
 }
 
 model Message {
   id             String      @id @default(cuid())
   conversationId String
   senderId       String
-  content        String
+  content        String?     // Opcional si es solo adjunto
   type           MessageType @default(TEXT)
-  attachments    Json?       // Array de attachments
+
+  // Estado del mensaje
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  editedAt       DateTime?
+
+  // Metadatos
+  metadata       Json?       // Para datos adicionales como replies, etc.
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id])
+  attachments  Attachment[]
 
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
+  @@index([deliveredAt])
+  @@index([readAt])
   @@map("messages")
+}
+
+model Attachment {
+  id          String                @id @default(cuid())
+  messageId   String
+
+  // Identificación del archivo
+  key         String                // Storage key/path
+  filename    String                // Nombre original
+  mimeType    String
+  size        Int                   // Tamaño en bytes
+
+  // Configuración de storage
+  storageProvider String            @default("supabase") // supabase | vercel
+  accessLevel     AttachmentAccessLevel @default(PRIVATE)
+
+  // Metadatos adicionales
+  metadata    Json?                 // Dimensiones, duración, etc.
+
+  // Auditoría
+  uploadedBy  String
+  uploadedAt  DateTime              @default(now())
+
+  message     Message               @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploader    User                  @relation(fields: [uploadedBy], references: [id])
+
+  @@index([messageId])
+  @@index([key])
+  @@index([storageProvider])
+  @@index([uploadedBy])
+  @@index([uploadedAt])
+  @@map("attachments")
 }
 
 model Review {

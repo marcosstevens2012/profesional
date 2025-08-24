@@ -20,11 +20,21 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "off",
     "no-unused-vars": [
       "error",
-      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        // Allow unused constructor parameters (NestJS DI pattern)
+        args: "after-used",
+      },
     ],
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        // Allow unused constructor parameters (NestJS DI pattern)
+        args: "after-used",
+      },
     ],
   },
 };

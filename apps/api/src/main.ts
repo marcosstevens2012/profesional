@@ -96,14 +96,16 @@ async function bootstrap() {
   }
 
   // Start server
-  const port = configService.get("PORT", 3001);
+  const port = configService.get("PORT", 3002);
   await app.listen(port, "0.0.0.0");
 
   const nodeEnv = configService.get("NODE_ENV");
   logger.log(`🚀 API running in ${nodeEnv} mode on port ${port}`);
   logger.log(`🔒 CORS origins: ${corsOrigins.join(", ")}`);
   logger.log(
-    `💨 Rate limiting: ${configService.get("RATE_LIMIT_MAX")} req/${configService.get("RATE_LIMIT_TTL")}s`
+    `💨 Rate limiting: ${configService.get(
+      "RATE_LIMIT_MAX"
+    )} req/${configService.get("RATE_LIMIT_TTL")}s`
   );
 }
 
