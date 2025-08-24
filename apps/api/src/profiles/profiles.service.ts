@@ -1,253 +1,173 @@
-import { Injectable } from "@nestjs/common";
-import { PaginatedResponse, ProfessionalProfile } from "@profesional/contracts";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { Profile } from "@prisma/client";
+import { PrismaService } from "../database/prisma.service";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 
 @Injectable()
 export class ProfilesService {
-  // Mock data for testing
-  private mockProfiles: Array<
-    ProfessionalProfile & {
-      user?: { name: string; avatarUrl?: string };
-      slug?: string;
-      location?: string;
-      skills?: string[];
-      responseTime?: string;
-      services?: Array<{ id: string; title: string; price: number }>;
-      reviews?: Array<{
-        id: string;
-        rating: number;
-        comment: string;
-        client: string;
-      }>;
-    }
-  > = [
-    {
-      id: "1",
-      userId: "user1",
-      title: "Desarrollador Full-Stack",
-      description:
-        "Especialista en React, Node.js y bases de datos. Más de 5 años creando aplicaciones web modernas.",
-      hourlyRate: 15000,
-      currency: "ARS" as const,
-      experience: 5,
-      isVerified: true,
-      rating: 4.8,
-      reviewCount: 42,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-      // Propiedades requeridas
-      isAvailable: true,
-      completedBookings: 42,
-      portfolio: [],
-      certifications: [],
-      languages: ["es", "en"],
-      // Campos adicionales
-      user: {
-        name: "Juan Pérez",
-        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=juan",
-      },
-      slug: "juan-perez-fullstack",
-      location: "Buenos Aires, Argentina",
-      skills: ["React", "Node.js", "TypeScript", "PostgreSQL"],
-      responseTime: "2 horas",
-      services: [
-        { id: "1", title: "Desarrollo Frontend", price: 12000 },
-        { id: "2", title: "Desarrollo Backend", price: 15000 },
-        { id: "3", title: "Consultoría técnica", price: 18000 },
-      ],
-      reviews: [
-        {
-          id: "1",
-          rating: 5,
-          comment: "Excelente trabajo, muy profesional",
-          client: "María González",
-        },
-        {
-          id: "2",
-          rating: 4,
-          comment: "Entregó en tiempo y forma",
-          client: "Carlos López",
-        },
-      ],
-    },
-    {
-      id: "2",
-      userId: "user2",
-      title: "Diseñadora UX/UI",
-      description:
-        "Diseñadora especializada en experiencia de usuario y interfaces modernas. Portfolio con más de 50 proyectos.",
-      hourlyRate: 12000,
-      currency: "ARS" as const,
-      experience: 3,
-      isVerified: false,
-      rating: 4.6,
-      reviewCount: 28,
-      createdAt: new Date("2024-01-15"),
-      updatedAt: new Date("2024-01-15"),
-      // Propiedades requeridas
-      isAvailable: true,
-      completedBookings: 28,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
-      // Campos adicionales
-      user: {
-        name: "Ana Rodríguez",
-        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=ana",
-      },
-      slug: "ana-rodriguez-uxui",
-      location: "Córdoba, Argentina",
-      skills: ["Figma", "Adobe XD", "Sketch", "Prototyping"],
-      responseTime: "4 horas",
-      services: [
-        { id: "4", title: "Diseño de interfaces", price: 10000 },
-        { id: "5", title: "Prototipado", price: 8000 },
-        { id: "6", title: "Research UX", price: 15000 },
-      ],
-      reviews: [
-        {
-          id: "3",
-          rating: 5,
-          comment: "Diseños increíbles, muy creativa",
-          client: "Pedro Martín",
-        },
-      ],
-    },
-    {
-      id: "3",
-      userId: "user3",
-      title: "Especialista en Marketing Digital",
-      description:
-        "Experto en campañas de Google Ads, Facebook Ads y SEO. Ayudo a empresas a aumentar sus ventas online.",
-      hourlyRate: 8000,
-      currency: "ARS" as const,
-      experience: 4,
-      isVerified: true,
-      rating: 4.9,
-      reviewCount: 67,
-      createdAt: new Date("2024-02-01"),
-      updatedAt: new Date("2024-02-01"),
-      // Propiedades requeridas
-      isAvailable: true,
-      completedBookings: 67,
-      portfolio: [],
-      certifications: [],
-      languages: ["es"],
-      // Campos adicionales
-      user: {
-        name: "Luis Fernández",
-        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=luis",
-      },
-      slug: "luis-fernandez-marketing",
-      location: "Rosario, Argentina",
-      skills: ["Google Ads", "Facebook Ads", "SEO", "Analytics"],
-      responseTime: "1 hora",
-      services: [
-        { id: "7", title: "Campaña Google Ads", price: 6000 },
-        { id: "8", title: "Optimización SEO", price: 10000 },
-        { id: "9", title: "Social Media", price: 7000 },
-      ],
-      reviews: [
-        {
-          id: "4",
-          rating: 5,
-          comment: "Aumentó mis ventas un 200%",
-          client: "Roberto Silva",
-        },
-        {
-          id: "5",
-          rating: 5,
-          comment: "Muy profesional y efectivo",
-          client: "Laura Morales",
-        },
-      ],
-    },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createProfileDto: any) {
-    return { message: "Profile created", data: createProfileDto };
+  async create(createProfileDto: any): Promise<any> {
+    // This would be for creating professional profiles
+    // For now, return a mock implementation
+    return {
+      message: "Profile creation not implemented yet",
+      data: createProfileDto,
+    };
   }
 
-  async findAll(
-    query: any = {}
-  ): Promise<PaginatedResponse<ProfessionalProfile>> {
-    let filteredProfiles = [...this.mockProfiles];
+  async getMyProfile(userId: string): Promise<Profile> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+          },
+        },
+      },
+    });
 
-    // Apply filters
-    if (query.category) {
-      filteredProfiles = filteredProfiles.filter(profile =>
-        profile.title.toLowerCase().includes(query.category.toLowerCase())
-      );
+    if (!profile) {
+      throw new NotFoundException("Profile not found for this user");
     }
 
-    if (query.location) {
-      filteredProfiles = filteredProfiles.filter(profile =>
-        profile.location?.toLowerCase().includes(query.location.toLowerCase())
-      );
+    return profile;
+  }
+
+  async updateMyProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto
+  ): Promise<Profile> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
+
+    if (!profile) {
+      throw new NotFoundException("Profile not found for this user");
     }
 
-    if (query.minRate) {
-      filteredProfiles = filteredProfiles.filter(
-        profile => profile.hourlyRate >= parseInt(query.minRate)
-      );
-    }
+    return this.prisma.profile.update({
+      where: { userId },
+      data: updateProfileDto,
+    });
+  }
 
-    if (query.maxRate) {
-      filteredProfiles = filteredProfiles.filter(
-        profile => profile.hourlyRate <= parseInt(query.maxRate)
-      );
-    }
-
-    if (query.rating) {
-      filteredProfiles = filteredProfiles.filter(
-        profile => profile.rating >= parseFloat(query.rating)
-      );
-    }
-
-    if (query.isVerified !== undefined) {
-      const isVerified = query.isVerified === "true";
-      filteredProfiles = filteredProfiles.filter(
-        profile => profile.isVerified === isVerified
-      );
-    }
-
-    // Pagination
+  async findAll(query: any) {
     const page = parseInt(query.page) || 1;
-    const limit = parseInt(query.limit) || 20;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+    const limit = parseInt(query.limit) || 12;
+    const skip = (page - 1) * limit;
 
-    const paginatedProfiles = filteredProfiles.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(filteredProfiles.length / limit);
+    const [profiles, total] = await Promise.all([
+      this.prisma.profile.findMany({
+        skip,
+        take: limit,
+        where: {
+          user: {
+            status: "ACTIVE",
+            deletedAt: null,
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      this.prisma.profile.count({
+        where: {
+          user: {
+            status: "ACTIVE",
+            deletedAt: null,
+          },
+        },
+      }),
+    ]);
 
     return {
-      success: true,
-      data: paginatedProfiles,
-      pagination: {
+      data: profiles,
+      meta: {
+        total,
         page,
         limit,
-        total: filteredProfiles.length,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }
 
-  async findOne(id: string): Promise<ProfessionalProfile | null> {
-    const profile = this.mockProfiles.find(p => p.id === id);
-    return profile || null;
+  async findBySlug(slug: string): Promise<Profile | null> {
+    // Para Profile, buscamos por ID ya que no tiene campo slug
+    return this.prisma.profile.findFirst({
+      where: { id: slug },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+          },
+        },
+      },
+    });
   }
 
-  async findBySlug(slug: string): Promise<ProfessionalProfile | null> {
-    const profile = this.mockProfiles.find(p => p.slug === slug);
-    return profile || null;
+  async findOne(id: string): Promise<Profile> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!profile) {
+      throw new NotFoundException("Profile not found");
+    }
+
+    return profile;
   }
 
-  update(id: string, updateProfileDto: any) {
-    return { message: `Profile #${id} updated`, data: updateProfileDto };
+  async update(id: string, updateProfileDto: any): Promise<Profile> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+    });
+
+    if (!profile) {
+      throw new NotFoundException("Profile not found");
+    }
+
+    return this.prisma.profile.update({
+      where: { id },
+      data: updateProfileDto,
+    });
   }
 
-  remove(id: string) {
-    return { message: `Profile #${id} deleted` };
+  async remove(id: string): Promise<void> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+    });
+
+    if (!profile) {
+      throw new NotFoundException("Profile not found");
+    }
+
+    await this.prisma.profile.delete({
+      where: { id },
+    });
   }
 }

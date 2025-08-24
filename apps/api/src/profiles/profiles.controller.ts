@@ -7,9 +7,13 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { Public, Role, Roles } from "../common";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ProfilesService } from "./profiles.service";
 
 @ApiTags("Profiles")
@@ -23,6 +27,23 @@ export class ProfilesController {
   @ApiOperation({ summary: "Create professional profile" })
   create(@Body() createProfileDto: any) {
     return this._profilesService.create(createProfileDto);
+  }
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get current user profile" })
+  getMyProfile(@Req() req: any) {
+    return this._profilesService.getMyProfile(req.user.userId);
+  }
+
+  @Patch("me")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Update current user profile" })
+  updateMyProfile(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+    return this._profilesService.updateMyProfile(
+      req.user.userId,
+      updateProfileDto
+    );
   }
 
   @Get()

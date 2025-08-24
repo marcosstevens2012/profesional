@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Chat Test - Profesional</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+      }
+      .messages {
+        border: 1px solid #ccc;
+        height: 400px;
+        overflow-y: scroll;
+        padding: 10px;
+        margin: 10px 0;
+      }
+      .input-area {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      input {
+        flex: 1;
+        padding: 8px;
+      }
+      button {
+        padding: 8px 16px;
+      }
+      .message {
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 5px;
+      }
+      .my-message {
+        background: #e3f2fd;
+        text-align: right;
+      }
+      .other-message {
+        background: #f5f5f5;
+      }
+      .system-message {
+        background: #fff3e0;
+        font-style: italic;
+      }
+      .user-selection {
+        margin-bottom: 20px;
+      }
+      .connected {
+        color: green;
+      }
+      .disconnected {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Chat Test - Sistema Profesional</h1>
+
+      <div class="user-selection">
+        <h3>Seleccionar Usuario:</h3>
+        <button onclick="setUser('cliente')">Cliente</button>
+        <button onclick="setUser('profesional')">Profesional</button>
+        <p>Usuario actual: <span id="currentUser">Ninguno</span></p>
+        <p>
+          Estado: <span id="status" class="disconnected">Desconectado</span>
+        </p>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="input-area">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Escribe tu mensaje..."
+          onkeypress="onEnterKey(event)"
+          disabled
+        />
+        <button onclick="sendMessage()" id="sendBtn" disabled>Enviar</button>
+      </div>
+
+      <div style="margin-top: 20px">
+        <h3>Testing Info:</h3>
+        <p>Booking ID: <strong>chat-test-booking-001</strong></p>
+        <p>Cliente ID: <strong>1</strong></p>
+        <p>Profesional ID: <strong>2</strong></p>
+      </div>
+    </div>
+
+    <script>
+      let socket = null;
+      let currentUser = null;
+      let bookingId = "chat-test-booking-001";
+
+      // JWT tokens (deberás actualizarlos si expiran)
+      const tokens = {
+        cliente:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJjbGllbnRlQHRlc3QuY29tIiwicm9sZSI6ImNsaWVudCIsImlhdCI6MTc1NjAzMTM1MSwiZXhwIjoxNzU2MDMyMjUxfQ.ViX0DzTZlbX8otO8dBqM1Sqwfavi8K8iQb80IzXEtuE",
+        profesional:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiZW1haWwiOiJwcm9mZXNpb25hbEB0ZXN0LmNvbSIsInJvbGUiOiJwcm9mZXNzaW9uYWwiLCJpYXQiOjE3NTYwMzEzNjIsImV4cCI6MTc1NjAzMjI2Mn0.hpYOHER3SNMVddcKY2MwQ6ZHE8Q7DjRYSWZajIygsHI",
+      };
+
+      function setUser(userType) {
+        if (socket) {
+          socket.close();
+        }
+
+        currentUser = userType;
+        document.getElementById("currentUser").textContent = userType;
+        connectSocket();
+      }
+
+      function connectSocket() {
+        if (!currentUser) return;
+
+        const token = tokens[currentUser];
+        socket = io("http://localhost:3002", {
+          auth: {
+            token: token,
+          },
+        });
+
+        socket.on("connect", () => {
+          addSystemMessage("✅ Conectado como " + currentUser);
+          document.getElementById("status").textContent = "Conectado";
+          document.getElementById("status").className = "connected";
+          document.getElementById("messageInput").disabled = false;
+          document.getElementById("sendBtn").disabled = false;
+
+          // Unirse a la conversación
+          socket.emit("conversation:join", { bookingId });
+        });
+
+        socket.on("disconnect", () => {
+          addSystemMessage("❌ Desconectado");
+          document.getElementById("status").textContent = "Desconectado";
+          document.getElementById("status").className = "disconnected";
+          document.getElementById("messageInput").disabled = true;
+          document.getElementById("sendBtn").disabled = true;
+        });
+
+        socket.on("message:received", data => {
+          addMessage(data.message, false);
+        });
+
+        socket.on("connect_error", error => {
+          addSystemMessage("❌ Error de conexión: " + error.message);
+        });
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (!message || !socket) return;
+
+        // Añadir mensaje localmente
+        addMessage(message, true);
+
+        // Enviar mensaje via WebSocket
+        socket.emit("message:send", {
+          bookingId,
+          content: message,
+          type: "text",
+        });
+
+        input.value = "";
+      }
+
+      function addMessage(content, isMine) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className =
+          "message " + (isMine ? "my-message" : "other-message");
+        messageDiv.textContent = content;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function addSystemMessage(content) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message system-message";
+        messageDiv.textContent = content;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function onEnterKey(event) {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      }
+    </script>
+
+    <!-- Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </body>
+</html>

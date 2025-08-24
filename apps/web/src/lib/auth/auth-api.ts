@@ -10,7 +10,7 @@ import {
   VerifyEmailRequest,
 } from "@profesional/contracts";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 
 class AuthAPI {
   private baseUrl = `${API_BASE_URL}/auth`;

@@ -55,6 +55,20 @@ async function main() {
     },
   });
 
+  // Crear ProfessionalProfile
+  const professionalProfile = await prisma.professionalProfile.upsert({
+    where: { userId: user2.id },
+    update: {},
+    create: {
+      userId: user2.id,
+      title: "Profesional Test",
+      description: "Profesional de prueba para testing de chat",
+      yearsExperience: 5,
+      hourlyRate: 50.0,
+      isAvailable: true,
+    },
+  });
+
   // Crear booking de prueba directo (sin dependencies complejas)
   const booking = await prisma.booking.upsert({
     where: { id: "test-booking-123" },
@@ -62,25 +76,25 @@ async function main() {
     create: {
       id: "test-booking-123",
       clientId: user1.id,
-      professionalId: user2.id,
+      professionalId: professionalProfile.id,
       scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Mañana
       duration: 60,
-      totalAmount: 50.0,
+      price: 50.0,
       status: "CONFIRMED",
-      location: "Online - Chat Test",
       notes: "Booking para probar el sistema de chat",
-      // Vamos a omitir campos que requieren foreign keys complejas
     },
   });
 
   console.log("✅ Datos de prueba creados:");
   console.log("👤 Cliente:", user1.email, "- ID:", user1.id);
   console.log("👤 Profesional:", user2.email, "- ID:", user2.id);
-  console.log("📅 Booking:", booking.id);
+  console.log("� ProfessionalProfile ID:", professionalProfile.id);
+  console.log("�📅 Booking:", booking.id);
   console.log("");
   console.log("🔑 Para probar JWT, usa estos user IDs:");
   console.log("Cliente ID:", user1.id);
   console.log("Profesional ID:", user2.id);
+  console.log("ProfessionalProfile ID:", professionalProfile.id);
   console.log("Booking ID:", booking.id);
 }
 
