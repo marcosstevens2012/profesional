@@ -34,7 +34,9 @@ export default function LoginPage() {
       const response = await login({ email, password });
       console.log("Login exitoso:", response);
 
-      // El redirect se manejará en el useEffect cuando user cambie
+      // Forzar redirección inmediata después del login exitoso
+      const callbackUrl = searchParams.get("callbackUrl") || "/panel";
+      window.location.href = callbackUrl; // Usar window.location para forzar recarga
     } catch (err: any) {
       console.error("Error en login:", err);
       setError(err.message || "Error al iniciar sesión");
