@@ -15,8 +15,6 @@ async function main() {
   // Limpiar datos existentes en orden correcto (respetando foreign keys)
   await prisma.paymentEvent.deleteMany();
   await prisma.payment.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.conversation.deleteMany();
   await prisma.review.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.booking.deleteMany();

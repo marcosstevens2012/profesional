@@ -1,6 +1,8 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { configAPI } from "@/lib/api/config";
+import { paymentsAPI } from "@/lib/api/payments";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
 import { formatLocation } from "@/lib/utils/location-utils";
 import {
@@ -10,15 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@profesional/ui";
-import {
-  ArrowLeft,
-  Calendar,
-  MapPin,
-  MessageCircle,
-  Star,
-  Video,
-} from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface ProfessionalPageProps {
   params: {
@@ -26,13 +22,142 @@ interface ProfessionalPageProps {
   };
 }
 
+// Modal de solicitud de consulta simplificado
+function ConsultationRequestModal({
+  professional,
+  isOpen,
+  onClose,
+  consultationPrice,
+}: {
+  professional: any;
+  isOpen: boolean;
+  onClose: () => void;
+  consultationPrice: number;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handlePayment = async () => {
+    setLoading(true);
+    try {
+      // Crear preferencia de pago en MercadoPago
+      const paymentPreference = await paymentsAPI.createConsultationPayment({
+        professionalId: professional.id,
+        professionalName: professional.user?.name || "Profesional",
+        amount: consultationPrice,
+      });
+
+      // Redirigir a MercadoPago
+      window.location.href = paymentPreference.init_point;
+    } catch (error) {
+      console.error("Error en el pago:", error);
+      alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl">
+        {/* Header simplificado */}
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold mx-auto mb-3">
+            {professional.user?.name?.charAt(0) || "P"}
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">
+            Consulta con {professional.user?.name}
+          </h2>
+          <p className="text-gray-500 text-sm">
+            {professional.serviceCategory?.name}
+          </p>
+        </div>
+
+        {/* Precio destacado */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mb-6 text-center">
+          <div className="text-3xl font-bold text-green-600 mb-1">
+            ${consultationPrice.toLocaleString()}
+          </div>
+          <div className="text-sm text-green-700">Precio fijo • Pago único</div>
+        </div>
+
+        {/* Beneficios clave */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-gray-700">
+              Respuesta en {professional.responseTime || "24 horas"}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span className="text-gray-700">Pago seguro con MercadoPago</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+            <span className="text-gray-700">
+              Notificación inmediata al profesional
+            </span>
+          </div>
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="flex-1"
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handlePayment}
+            className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Procesando...
+              </div>
+            ) : (
+              "Pagar y Solicitar"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfessionalPage({ params }: ProfessionalPageProps) {
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [consultationPrice, setConsultationPrice] = useState(25000);
   const router = useRouter();
   const {
     data: professional,
     isLoading,
     error,
   } = useProfileBySlug(params.slug);
+
+  // Cargar precio de consulta al montar el componente
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const priceConfig = await configAPI.getConsultationPrice();
+        setConsultationPrice(priceConfig.amount);
+      } catch (error) {
+        // Si no se puede obtener el precio (usuario no autenticado), usar valor por defecto
+        console.log("Using default consultation price");
+        setConsultationPrice(25000);
+      }
+    };
+
+    fetchPrice();
+  }, []);
+
   // Type assertion para las propiedades extendidas
   const prof = professional as any;
 
@@ -51,14 +176,16 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-8">
-          <h1 className="text-2xl font-bold mb-4">Perfil no encontrado</h1>
+          <h1 className="text-2xl font-bold mb-4">Profesional no encontrado</h1>
           <p className="mt-2 text-muted-foreground">
-            El profesional que buscas no está disponible.
+            El profesional que buscas no existe o ha sido removido.
           </p>
-          <Button onClick={() => router.push("/explorar")} className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a explorar
-          </Button>
+          <div className="mt-6">
+            <Button onClick={() => router.back()} variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver atrás
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -66,8 +193,8 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/" },
-    { label: "Explorar", href: "/explorar" },
-    { label: prof.user?.name || "Profesional" },
+    { label: "Profesionales", href: "/profesionales" },
+    { label: prof?.user?.name || "Cargando...", href: "#" },
   ];
 
   return (
@@ -78,234 +205,292 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
         <div className="mt-8 grid lg:grid-cols-3 gap-8">
           {/* Perfil Principal */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Header del perfil */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                    {prof.user?.name?.charAt(0) || "P"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-2xl font-bold text-gray-900">
-                        {prof.user?.name}
-                      </h1>
+            {/* Header del perfil mejorado */}
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                {/* Banner de color */}
+                <div className="h-24 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800"></div>
+
+                <div className="p-6 -mt-12">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar mejorado */}
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
+                        <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                          {prof.user?.name?.charAt(0) || "P"}
+                        </div>
+                      </div>
                       {prof.isVerified && (
-                        <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                          ✓ Verificado
+                        <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                          ✓
                         </div>
                       )}
                     </div>
-                    <h2 className="text-xl text-gray-600 mt-1">{prof.title}</h2>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{prof.rating}</span>
-                        <span>({prof.reviewCount} reseñas)</span>
+
+                    <div className="flex-1 mt-12">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-3xl font-bold text-gray-900">
+                          {prof.user?.name}
+                        </h1>
+                        {prof.isVerified && (
+                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                            ✓ Verificado
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {formatLocation(prof.location)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        Responde en {prof.responseTime || "24 horas"}
+
+                      <h2 className="text-xl text-blue-600 font-semibold mb-3">
+                        {prof.serviceCategory?.name}
+                      </h2>
+
+                      {/* Métricas destacadas */}
+                      <div className="flex items-center gap-6 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                          <span className="font-bold text-lg">
+                            {prof.rating}
+                          </span>
+                          <span className="text-gray-600">
+                            ({prof.reviewCount} reseñas)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <MapPin className="h-4 w-4" />
+                          <span>{formatLocation(prof.location)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <MessageCircle className="h-4 w-4" />
+                          <span>Responde en {prof.responseTime || "24h"}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Tags mejorados */}
+                  {prof.tags && prof.tags.length > 0 && (
+                    <div className="mt-6 pt-4 border-t">
+                      <div className="flex flex-wrap gap-2">
+                        {prof.tags.map((tag: string, index: number) => (
+                          <span
+                            key={index}
+                            className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {prof.skills && prof.skills.length > 0 && (
-                  <div className="mt-4">
-                    <div className="flex flex-wrap gap-2">
-                      {prof.skills.map((skill: string, index: number) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
-            {/* Descripción */}
+            {/* Descripción mejorada */}
             <Card>
               <CardHeader>
-                <CardTitle>Sobre mí</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    👤
+                  </div>
+                  Sobre {prof.user?.name?.split(" ")[0] || "este profesional"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed text-lg mb-6">
                   {prof.description}
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {prof.experience || 1}+ años en el área
+
+                {/* Métricas destacadas */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      {prof.experience || 1}+
                     </div>
-                    <div className="text-sm text-gray-600">Experiencia</div>
+                    <div className="text-sm text-blue-700 font-medium">
+                      Años de experiencia
+                    </div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
+
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-1">
                       {prof.reviewCount}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      Proyectos completados
+                    <div className="text-sm text-green-700 font-medium">
+                      Consultas realizadas
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-1">
+                      {prof.rating}
+                    </div>
+                    <div className="text-sm text-purple-700 font-medium">
+                      Calificación promedio
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Servicios */}
+            {/* Reseñas mejoradas */}
             <Card>
               <CardHeader>
-                <CardTitle>Servicios que ofrezco</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {prof.services && prof.services.length > 0 ? (
-                  <div className="space-y-4">
-                    {prof.services.map((service: any) => (
-                      <div
-                        key={service.id}
-                        className="flex justify-between items-center p-4 border rounded-lg"
-                      >
-                        <div>
-                          <h3 className="font-medium">{service.title}</h3>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-lg">
-                            ${service.price.toLocaleString()} ARS
-                          </div>
-                          <div className="text-sm text-gray-600">por hora</div>
-                        </div>
-                      </div>
-                    ))}
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                    ⭐
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    Este profesional aún no ha listado sus servicios
-                    específicos.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Reseñas */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Reseñas de clientes</CardTitle>
+                  Reseñas de clientes ({prof.reviewCount})
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {prof.reviews && prof.reviews.length > 0 ? (
-                  prof.reviews.map((review: any) => (
-                    <div
-                      key={review.id}
-                      className="border-b last:border-b-0 py-4"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
+                  <div className="space-y-4">
+                    {prof.reviews.slice(0, 3).map((review: any) => (
+                      <div
+                        key={review.id}
+                        className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white font-bold text-sm">
+                              {review.client.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900">
+                                {review.client}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 ${
+                                      i < review.rating
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Hace {Math.floor(Math.random() * 30) + 1} días
+                          </div>
                         </div>
-                        <span className="font-medium">{review.client}</span>
+                        <p className="text-gray-700 italic">
+                          &ldquo;{review.comment}&rdquo;
+                        </p>
                       </div>
-                      <p className="text-gray-700">{review.comment}</p>
-                    </div>
-                  ))
+                    ))}
+
+                    {prof.reviews.length > 3 && (
+                      <div className="text-center pt-4">
+                        <Button variant="outline" className="text-blue-600">
+                          Ver todas las reseñas ({prof.reviews.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    Este profesional aún no tiene reseñas.
-                  </p>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl text-gray-400 mx-auto mb-4">
+                      💬
+                    </div>
+                    <p className="text-gray-500 text-lg font-medium mb-2">
+                      Este profesional aún no tiene reseñas
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      ¡Sé el primero en dejar una reseña después de tu consulta!
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar de contacto */}
-          <div className="space-y-6">
-            <Card>
+          {/* Sidebar de consulta optimizado */}
+          <div className="space-y-4">
+            {/* Card principal de consulta */}
+            <Card className="border-2 border-green-100">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-gray-900">
-                    ${prof.hourlyRate?.toLocaleString()} ARS
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-3">
+                    💬 Consulta Online
                   </div>
-                  <div className="text-gray-600">por hora</div>
+                  <div className="text-4xl font-bold text-green-600 mb-2">
+                    ${consultationPrice.toLocaleString()}
+                  </div>
+                  <div className="text-gray-600 font-medium mb-1">
+                    Precio fijo • Sin sorpresas
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Todas las consultas cuestan lo mismo
+                  </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <Button className="w-full" size="lg">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Enviar mensaje
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    <Video className="mr-2 h-4 w-4" />
-                    Videollamada
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Agendar cita
-                  </Button>
-                </div>
+                <Button
+                  className="w-full mb-4 h-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                  onClick={() => setShowConsultationModal(true)}
+                >
+                  💳 Pagar y Solicitar Consulta
+                </Button>
 
-                <div className="text-sm text-gray-600 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Tiempo de respuesta:</span>
-                    <span>{prof.responseTime || "24 horas"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Idiomas:</span>
-                    <span>Español, Inglés</span>
+                {/* Garantías rápidas */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+                  <div className="text-sm space-y-2">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      <span className="font-medium">
+                        Respuesta garantizada en {prof.responseTime || "24h"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      <span className="font-medium">
+                        Pago 100% seguro con MercadoPago
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      <span className="font-medium">
+                        Notificación inmediata al profesional
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Stats adicionales */}
+            {/* Stats compactas */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Estadísticas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      Calificación promedio:
-                    </span>
-                    <div className="flex items-center gap-1">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{prof.rating}</span>
+                      <span className="font-bold text-lg">{prof.rating}</span>
                     </div>
+                    <div className="text-xs text-gray-600">Calificación</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      Proyectos completados:
-                    </span>
-                    <span className="font-medium">{prof.reviewCount}</span>
+                  <div>
+                    <div className="font-bold text-lg text-blue-600">
+                      {prof.reviewCount}
+                    </div>
+                    <div className="text-xs text-gray-600">Consultas</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Años de experiencia:</span>
-                    <span className="font-medium">{prof.experience}+</span>
+                  <div>
+                    <div className="font-bold text-lg text-purple-600">
+                      {prof.experience || 1}+
+                    </div>
+                    <div className="text-xs text-gray-600">Años exp.</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Verificado:</span>
-                    <span
-                      className={
-                        prof.isVerified ? "text-green-600" : "text-gray-400"
-                      }
+                  <div>
+                    <div
+                      className={`font-bold text-lg ${prof.isVerified ? "text-green-600" : "text-gray-400"}`}
                     >
-                      {prof.isVerified ? "✓ Sí" : "No"}
-                    </span>
+                      {prof.isVerified ? "✓" : "✗"}
+                    </div>
+                    <div className="text-xs text-gray-600">Verificado</div>
                   </div>
                 </div>
               </CardContent>
@@ -313,6 +498,14 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Modal de solicitud de consulta */}
+      <ConsultationRequestModal
+        professional={prof}
+        isOpen={showConsultationModal}
+        onClose={() => setShowConsultationModal(false)}
+        consultationPrice={consultationPrice}
+      />
     </div>
   );
 }

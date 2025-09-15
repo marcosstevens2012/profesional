@@ -5,7 +5,6 @@ export const messages = {
   "nav.login": "Ingresar",
   "nav.panel": "Panel",
   "nav.profile": "Perfil",
-  "nav.messages": "Mensajes",
   "nav.payments": "Pagos",
   "nav.requests": "Mis Solicitudes",
 
@@ -47,7 +46,6 @@ export const messages = {
   // Panel
   "panel.welcome": "Bienvenido, {name}",
   "panel.tabs.requests": "Mis Solicitudes",
-  "panel.tabs.messages": "Mensajes",
   "panel.tabs.payments": "Pagos",
   "panel.tabs.profile": "Mi Perfil",
 
