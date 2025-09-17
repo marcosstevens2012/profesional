@@ -10,7 +10,7 @@ import { PrismaService } from "../database/prisma.service";
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly _prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createBookingDto: any) {
     // Generar jitsiRoom único: slug profesional + UUID
