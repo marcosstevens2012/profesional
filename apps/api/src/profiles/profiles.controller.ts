@@ -80,4 +80,22 @@ export class ProfilesController {
   remove(@Param("id") id: string) {
     return this._profilesService.remove(id);
   }
+
+  @Patch("me/toggle-active")
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.PROFESSIONAL)
+  @ApiOperation({ summary: "Toggle professional active status" })
+  toggleActiveStatus(@Req() req: any) {
+    return this._profilesService.toggleProfessionalActiveStatus(
+      req.user.userId
+    );
+  }
+
+  @Get("me/active-status")
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.PROFESSIONAL)
+  @ApiOperation({ summary: "Get professional active status" })
+  getActiveStatus(@Req() req: any) {
+    return this._profilesService.getProfessionalActiveStatus(req.user.userId);
+  }
 }

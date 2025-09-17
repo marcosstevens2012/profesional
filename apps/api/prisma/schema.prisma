@@ -113,7 +113,7 @@ model ProfessionalProfile {
   name              String?  // Nombre profesional
   bio               String?  // Bio corta
   description       String?  // Descripción larga
-  pricePerSession   Decimal  @db.Decimal(10,2)
+  pricePerSession   Decimal  @default(25000.00) @db.Decimal(10,2)
   standardDuration  Int      // Duración en minutos
   serviceCategoryId String
   tags              String[] // Array de tags
@@ -121,6 +121,7 @@ model ProfessionalProfile {
   rating            Float    @default(0)
   reviewCount       Int      @default(0)
   isVerified        Boolean  @default(false)
+  isActive          Boolean  @default(true)
   brandId           String?  // Para futuro white-label
 
   createdAt DateTime @default(now())
@@ -138,6 +139,7 @@ model ProfessionalProfile {
   @@index([serviceCategoryId])
   @@index([locationId])
   @@index([isVerified])
+  @@index([isActive])
   @@index([rating])
   @@index([tags])
   @@index([brandId])
