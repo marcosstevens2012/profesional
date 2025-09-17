@@ -1,6 +1,7 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import JitsiMeeting from "@/components/JitsiMeeting";
 import {
   Button,
   Card,
@@ -16,10 +17,11 @@ import {
   User,
   Video,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 const tabs = [
   { id: "requests", label: "Mis Solicitudes", icon: FileText },
+  { id: "meetings", label: "Videollamadas", icon: Video },
   { id: "messages", label: "Mensajes", icon: MessageCircle },
   { id: "payments", label: "Pagos", icon: CreditCard },
   { id: "profile", label: "Mi Perfil", icon: User },
@@ -32,6 +34,8 @@ export default function PanelPage() {
     switch (activeTab) {
       case "requests":
         return <RequestsTab />;
+      case "meetings":
+        return <MeetingsTab />;
       case "messages":
         return <MessagesTab />;
       case "payments":
@@ -236,6 +240,164 @@ function RequestsTab() {
           </CardContent>
         </Card>
       ))}
+    </div>
+  );
+}
+
+function MeetingsTab() {
+  const [meetings, setMeetings] = useState([]);
+  const [activeBooking, setActiveBooking] = useState<any>(null);
+  const [isInMeeting, setIsInMeeting] = useState(false);
+
+  // Función para obtener reuniones pendientes
+  const fetchPendingMeetings = async () => {
+    try {
+      const response = await fetch("/api/bookings/professional/meetings", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+      setMeetings(data.meetings || []);
+    } catch (error) {
+      console.error("Error fetching meetings:", error);
+    }
+  };
+
+  // Función para aceptar una reunión
+  const acceptMeeting = async (bookingId: string) => {
+    try {
+      const response = await fetch(
+        `/api/bookings/${bookingId}/accept-meeting`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setActiveBooking(data.booking);
+        setIsInMeeting(true);
+        await fetchPendingMeetings(); // Actualizar lista
+      }
+    } catch (error) {
+      console.error("Error accepting meeting:", error);
+    }
+  };
+
+  // Función para finalizar reunión
+  const endMeeting = () => {
+    setIsInMeeting(false);
+    setActiveBooking(null);
+  };
+
+  // Cargar reuniones al montar el componente
+  React.useEffect(() => {
+    fetchPendingMeetings();
+    const interval = setInterval(fetchPendingMeetings, 30000); // Actualizar cada 30 segundos
+    return () => clearInterval(interval);
+  }, []);
+
+  // Si está en una reunión activa
+  if (isInMeeting && activeBooking) {
+    return (
+      <div className="h-screen">
+        <JitsiMeeting
+          roomName={activeBooking.jitsiRoom}
+          userDisplayName="Profesional" // Debería venir del contexto del usuario
+          onVideoConferenceLeft={endMeeting}
+          maxDuration={18 * 60 * 1000} // 18 minutos
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Mis Videollamadas</h2>
+        <Button onClick={fetchPendingMeetings} variant="outline" size="sm">
+          Actualizar
+        </Button>
+      </div>
+
+      {meetings.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Video size={48} className="mx-auto mb-4 text-gray-400" />
+            <h3 className="text-xl font-semibold mb-2">
+              No hay reuniones pendientes
+            </h3>
+            <p className="text-gray-600">
+              Las reuniones aparecerán aquí cuando los clientes realicen pagos y
+              soliciten videollamadas.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {meetings.map((meeting: any) => (
+            <Card key={meeting.id} className="border-l-4 border-l-orange-500">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>Nueva Videollamada</span>
+                  <span className="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                    Esperando
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <strong>Cliente:</strong>{" "}
+                      {meeting.user?.name || "Cliente"}
+                    </div>
+                    <div>
+                      <strong>Solicitud:</strong>{" "}
+                      {new Date(meeting.createdAt).toLocaleString()}
+                    </div>
+                    <div>
+                      <strong>Duración:</strong> 18 minutos máximo
+                    </div>
+                    <div>
+                      <strong>Estado:</strong>{" "}
+                      {meeting.meetingStatus === "PENDING"
+                        ? "Preparando"
+                        : "Cliente esperando"}
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Nota:</strong> El cliente ya realizó el pago y
+                      está esperando que aceptes la videollamada. Una vez que
+                      aceptes, tendrán 18 minutos para la sesión.
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <Button variant="outline" size="sm">
+                      Posponer
+                    </Button>
+                    <Button
+                      onClick={() => acceptMeeting(meeting.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                      size="sm"
+                    >
+                      Aceptar e Iniciar Videollamada
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

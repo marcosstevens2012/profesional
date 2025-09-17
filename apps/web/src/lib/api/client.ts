@@ -40,14 +40,27 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      // Token expirado o no válido, limpiar almacenamiento
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth-token");
-        document.cookie =
-          "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        // Redirigir a login si no estamos ya en la página de login
-        if (window.location.pathname !== "/ingresar") {
-          window.location.href = "/ingresar";
+      // Lista de endpoints que pueden fallar con 401 sin necesidad de redirigir
+      const allowedFailureEndpoints = [
+        "/config/consultation_price",
+        "/config/",
+      ];
+
+      const requestUrl = error.config?.url || "";
+      const shouldAllowFailure = allowedFailureEndpoints.some(endpoint =>
+        requestUrl.includes(endpoint)
+      );
+
+      if (!shouldAllowFailure) {
+        // Token expirado o no válido, limpiar almacenamiento
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth-token");
+          document.cookie =
+            "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          // Redirigir a login si no estamos ya en la página de login
+          if (window.location.pathname !== "/ingresar") {
+            window.location.href = "/ingresar";
+          }
         }
       }
     }

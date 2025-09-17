@@ -1,7 +1,6 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { configAPI } from "@/lib/api/config";
 import { paymentsAPI } from "@/lib/api/payments";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
 import { formatLocation } from "@/lib/utils/location-utils";
@@ -14,7 +13,7 @@ import {
 } from "@profesional/ui";
 import { ArrowLeft, MapPin, MessageCircle, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface ProfessionalPageProps {
   params: {
@@ -134,7 +133,6 @@ function ConsultationRequestModal({
 
 export default function ProfessionalPage({ params }: ProfessionalPageProps) {
   const [showConsultationModal, setShowConsultationModal] = useState(false);
-  const [consultationPrice, setConsultationPrice] = useState(25000);
   const router = useRouter();
   const {
     data: professional,
@@ -142,24 +140,13 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
     error,
   } = useProfileBySlug(params.slug);
 
-  // Cargar precio de consulta al montar el componente
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const priceConfig = await configAPI.getConsultationPrice();
-        setConsultationPrice(priceConfig.amount);
-      } catch (error) {
-        // Si no se puede obtener el precio (usuario no autenticado), usar valor por defecto
-        console.log("Using default consultation price");
-        setConsultationPrice(25000);
-      }
-    };
-
-    fetchPrice();
-  }, []);
-
   // Type assertion para las propiedades extendidas
   const prof = professional as any;
+
+  // Obtener precio directamente del perfil del profesional
+  const consultationPrice = prof?.pricePerSession
+    ? Number(prof.pricePerSession)
+    : 25000;
 
   if (isLoading) {
     return (

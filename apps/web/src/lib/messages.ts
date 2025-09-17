@@ -3,6 +3,7 @@ export const messages = {
   "nav.home": "Inicio",
   "nav.explore": "Explorar",
   "nav.login": "Ingresar",
+  "nav.logout": "Cerrar Sesión",
   "nav.panel": "Panel",
   "nav.profile": "Perfil",
   "nav.payments": "Pagos",

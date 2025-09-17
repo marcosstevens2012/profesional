@@ -1,8 +1,9 @@
 "use client";
 
+import { useAuth } from "@/lib/auth/auth-hooks";
 import { getButtonClasses } from "@/lib/utils";
 import { Button } from "@profesional/ui";
-import { Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +13,7 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const intl = useIntl();
   const pathname = usePathname();
+  const { user, logout, isLoading } = useAuth();
 
   const navigation = [
     { name: intl.formatMessage({ id: "nav.home" }), href: "/" },
@@ -58,12 +60,40 @@ export function Header() {
             </Button>
 
             {/* Auth buttons */}
-            <Link href="/ingresar" className={getButtonClasses("ghost", "sm")}>
-              {intl.formatMessage({ id: "nav.login" })}
-            </Link>
-            <Link href="/panel" className={getButtonClasses("default", "sm")}>
-              {intl.formatMessage({ id: "nav.panel" })}
-            </Link>
+            {user ? (
+              // Usuario autenticado - mostrar botón de logout
+              <div className="flex items-center space-x-2">
+                <Link href="/panel" className={getButtonClasses("ghost", "sm")}>
+                  {intl.formatMessage({ id: "nav.panel" })}
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  disabled={isLoading}
+                  className="flex items-center space-x-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{intl.formatMessage({ id: "nav.logout" })}</span>
+                </Button>
+              </div>
+            ) : (
+              // Usuario no autenticado - mostrar botones de login y panel
+              <>
+                <Link
+                  href="/ingresar"
+                  className={getButtonClasses("ghost", "sm")}
+                >
+                  {intl.formatMessage({ id: "nav.login" })}
+                </Link>
+                <Link
+                  href="/panel"
+                  className={getButtonClasses("default", "sm")}
+                >
+                  {intl.formatMessage({ id: "nav.panel" })}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

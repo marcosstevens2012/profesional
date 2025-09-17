@@ -72,12 +72,11 @@ export class ProfilesService {
       orderBy = { pricePerSession: "asc" };
     }
 
-    const [profiles, total] = await Promise.all([
+    const [allProfiles, _total] = await Promise.all([
       this._prisma.professionalProfile.findMany({
-        skip,
-        take: limit,
         where: {
           deletedAt: null,
+          isActive: true,
           user: {
             status: "ACTIVE",
             deletedAt: null,
@@ -132,12 +131,23 @@ export class ProfilesService {
             orderBy: { createdAt: "desc" },
             take: 5,
           },
+          // Incluir bookings activos para verificar disponibilidad
+          bookings: {
+            select: {
+              id: true,
+              meetingStatus: true,
+            },
+            where: {
+              OR: [{ meetingStatus: "ACTIVE" }, { meetingStatus: "WAITING" }],
+            },
+          },
         },
         orderBy,
       }),
       this._prisma.professionalProfile.count({
         where: {
           deletedAt: null,
+          isActive: true,
           user: {
             status: "ACTIVE",
             deletedAt: null,
@@ -146,21 +156,38 @@ export class ProfilesService {
       }),
     ]);
 
+    // Filtrar profesionales disponibles (máximo 1 activa + 1 en espera)
+    const availableProfiles = allProfiles.filter(profile => {
+      const activeMeetings =
+        profile.bookings?.filter(b => b.meetingStatus === "ACTIVE").length || 0;
+      const waitingMeetings =
+        profile.bookings?.filter(b => b.meetingStatus === "WAITING").length ||
+        0;
+
+      // Profesional disponible si no tiene 1 activa Y 1 en espera simultáneamente
+      return !(activeMeetings >= 1 && waitingMeetings >= 1);
+    });
+
+    // Aplicar paginación después del filtrado
+    const paginatedProfiles = availableProfiles.slice(skip, skip + limit);
+
     // Transform the data to format location as string
-    const transformedProfiles = profiles.map(profile => ({
+    const transformedProfiles = paginatedProfiles.map(profile => ({
       ...profile,
       location: profile.location
         ? `${profile.location.city}, ${profile.location.province}`
         : null,
+      // No exponer los bookings internos al frontend
+      bookings: undefined,
     }));
 
     return {
       data: transformedProfiles,
       meta: {
-        total,
+        total: availableProfiles.length, // Total de profesionales disponibles
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(availableProfiles.length / limit),
       },
     };
   }
@@ -169,7 +196,15 @@ export class ProfilesService {
     // Buscar por ID ya que ProfessionalProfile no tiene slug por ahora
     // TODO: Implementar slug generation para profesionales
     const profile = await this._prisma.professionalProfile.findFirst({
-      where: { id: slug },
+      where: {
+        id: slug,
+        isActive: true,
+        deletedAt: null,
+        user: {
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+      },
       include: {
         user: {
           select: {
@@ -329,5 +364,56 @@ export class ProfilesService {
     await this._prisma.profile.delete({
       where: { id },
     });
+  }
+
+  async toggleProfessionalActiveStatus(userId: string): Promise<any> {
+    // Buscar el perfil profesional del usuario
+    const professionalProfile =
+      await this._prisma.professionalProfile.findFirst({
+        where: {
+          userId,
+          deletedAt: null,
+        },
+      });
+
+    if (!professionalProfile) {
+      throw new NotFoundException(
+        "Professional profile not found for this user"
+      );
+    }
+
+    // Cambiar el estado activo
+    const updatedProfile = await this._prisma.professionalProfile.update({
+      where: { id: professionalProfile.id },
+      data: { isActive: !professionalProfile.isActive },
+    });
+
+    return {
+      message: `Professional profile ${
+        updatedProfile.isActive ? "activated" : "deactivated"
+      } successfully`,
+      isActive: updatedProfile.isActive,
+    };
+  }
+
+  async getProfessionalActiveStatus(
+    userId: string
+  ): Promise<{ isActive: boolean }> {
+    const professionalProfile =
+      await this._prisma.professionalProfile.findFirst({
+        where: {
+          userId,
+          deletedAt: null,
+        },
+        select: { isActive: true },
+      });
+
+    if (!professionalProfile) {
+      throw new NotFoundException(
+        "Professional profile not found for this user"
+      );
+    }
+
+    return { isActive: professionalProfile.isActive };
   }
 }
