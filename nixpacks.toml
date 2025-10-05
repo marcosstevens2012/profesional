@@ -1,0 +1,18 @@
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = [
+  "pnpm build --filter=api",
+  "cd apps/api && pnpm prisma generate"
+]
+
+[start]
+cmd = "cd apps/api && pnpm start:prod"
+
+[variables]
+NODE_ENV = "production"
+PNPM_VERSION = "8.15.6"
