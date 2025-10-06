@@ -175,7 +175,9 @@ export class SearchService {
         profile =>
           profile.title.toLowerCase().includes(query) ||
           profile.description.toLowerCase().includes(query) ||
-          profile.skills?.some(skill => skill.toLowerCase().includes(query))
+          profile.skills?.some((skill: string) =>
+            skill.toLowerCase().includes(query)
+          )
       );
     }
 
@@ -279,7 +281,7 @@ export class SearchService {
       }
 
       // Add skills
-      profile.skills?.forEach(skill => {
+      profile.skills?.forEach((skill: string) => {
         if (skill.toLowerCase().includes(queryLower)) {
           suggestions.add(skill);
         }
@@ -288,7 +290,7 @@ export class SearchService {
       // Add locations
       if (profile.location?.toLowerCase().includes(queryLower)) {
         const locationParts = profile.location.split(",");
-        locationParts.forEach(part => {
+        locationParts.forEach((part: string) => {
           const trimmed = part.trim();
           if (trimmed.toLowerCase().includes(queryLower)) {
             suggestions.add(trimmed);

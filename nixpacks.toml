@@ -6,12 +6,18 @@ cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = [
-  "pnpm build --filter=api",
+  "echo 'Checking workspace structure...'",
+  "ls -la",
+  "echo 'Checking packages directory...'",
+  "ls -la packages/",
+  "echo 'Building dependencies and API...'",
+  "pnpm turbo build --filter=@profesional/api",
+  "echo 'Generating Prisma client...'",
   "cd apps/api && pnpm prisma generate"
 ]
 
 [start]
-cmd = "cd apps/api && pnpm start:prod"
+cmd = "cd apps/api && pnpm start"
 
 [variables]
 NODE_ENV = "production"
