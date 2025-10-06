@@ -44,6 +44,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pino": "^8.16.2",
+    "posthog-node": "^5.9.2",
     "prisma": "^6.14.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",

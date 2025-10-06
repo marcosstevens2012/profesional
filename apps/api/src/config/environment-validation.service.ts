@@ -163,11 +163,12 @@ export class EnvironmentValidationService {
       posthogKey: this.configService.get<string>("POSTHOG_KEY"),
 
       // Database
-      databaseUrl: this.configService.get<string>("DATABASE_URL"),
+      databaseUrl: this.configService.get<string>("DATABASE_URL") || "",
 
       // Authentication
-      jwtSecret: this.configService.get<string>("JWT_SECRET"),
-      jwtRefreshSecret: this.configService.get<string>("JWT_REFRESH_SECRET"),
+      jwtSecret: this.configService.get<string>("JWT_SECRET") || "",
+      jwtRefreshSecret:
+        this.configService.get<string>("JWT_REFRESH_SECRET") || "",
       jwtExpiresIn: this.configService.get<string>("JWT_EXPIRES_IN", "15m"),
       jwtRefreshExpiresIn: this.configService.get<string>(
         "JWT_REFRESH_EXPIRES_IN",
@@ -175,18 +176,21 @@ export class EnvironmentValidationService {
       ),
 
       // MercadoPago
-      mpAccessToken: this.configService.get<string>("MP_ACCESS_TOKEN"),
-      mpWebhookSecret: this.configService.get<string>("MP_WEBHOOK_SECRET"),
+      mpAccessToken: this.configService.get<string>("MP_ACCESS_TOKEN") || "",
+      mpWebhookSecret:
+        this.configService.get<string>("MP_WEBHOOK_SECRET") || "",
       mpEnvironment: this.configService.get<string>(
         "MP_ENVIRONMENT",
         "sandbox"
       ),
 
       // Storage
-      storageEndpoint: this.configService.get<string>("STORAGE_ENDPOINT"),
-      storageBucket: this.configService.get<string>("STORAGE_BUCKET"),
-      storageAccessKey: this.configService.get<string>("STORAGE_ACCESS_KEY"),
-      storageSecretKey: this.configService.get<string>("STORAGE_SECRET_KEY"),
+      storageEndpoint: this.configService.get<string>("STORAGE_ENDPOINT") || "",
+      storageBucket: this.configService.get<string>("STORAGE_BUCKET") || "",
+      storageAccessKey:
+        this.configService.get<string>("STORAGE_ACCESS_KEY") || "",
+      storageSecretKey:
+        this.configService.get<string>("STORAGE_SECRET_KEY") || "",
       storageRegion: this.configService.get<string>(
         "STORAGE_REGION",
         "us-east-1"

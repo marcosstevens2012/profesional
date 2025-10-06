@@ -41,11 +41,19 @@ export const logger = {
 
   // User context
   setUser: (userId: string, email?: string, role?: string) => {
-    setUser({
+    const userContext: any = {
       id: userId,
-      email,
-      role,
-    });
+    };
+
+    if (email) {
+      userContext.email = email;
+    }
+
+    if (role) {
+      userContext.role = role;
+    }
+
+    setUser(userContext);
   },
 
   // Request context

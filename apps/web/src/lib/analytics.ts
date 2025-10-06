@@ -53,7 +53,7 @@ export const analytics = {
     if (posthogClient) {
       posthogClient.identify({
         distinctId: userId,
-        properties,
+        properties: properties || {},
       });
     }
   },
@@ -68,7 +68,7 @@ export const analytics = {
       posthogClient.capture({
         distinctId: "server",
         event,
-        properties,
+        properties: properties || {},
       });
     }
   },
