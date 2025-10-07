@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Bell, Check, CheckCheck } from "lucide-react";
-import Link from "next/link";
 import {
+  useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead,
   useNotifications,
   useUnreadNotificationsCount,
-  useMarkNotificationAsRead,
-  useMarkAllNotificationsAsRead,
 } from "@/hooks/useNotifications";
+import { Bell, Check, CheckCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);

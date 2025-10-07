@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Trash2, CheckCheck, Filter } from "lucide-react";
-import Link from "next/link";
 import {
-  useNotifications,
-  useMarkNotificationAsRead,
-  useMarkAllNotificationsAsRead,
   useDeleteNotification,
+  useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead,
+  useNotifications,
 } from "@/hooks/useNotifications";
+import { Bell, CheckCheck, Filter, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
