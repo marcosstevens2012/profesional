@@ -340,11 +340,14 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white font-bold text-sm">
-                              {review.client.charAt(0)}
+                              {review.client?.profile?.firstName?.charAt(0) ||
+                                "C"}
                             </div>
                             <div>
                               <div className="font-semibold text-gray-900">
-                                {review.client}
+                                {review.client?.profile
+                                  ? `${review.client.profile.firstName} ${review.client.profile.lastName}`
+                                  : "Cliente"}
                               </div>
                               <div className="flex items-center gap-1">
                                 {[...Array(5)].map((_, i) => (

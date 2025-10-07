@@ -1,5 +1,7 @@
 import {
+  BookingStatus,
   DayOfWeek,
+  MeetingStatus,
   PrismaClient,
   SlotType,
   UserRole,
@@ -10,9 +12,10 @@ import * as bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting database seed...");
+  console.log("🌱 Starting comprehensive database seed...");
 
   // Limpiar datos existentes en orden correcto (respetando foreign keys)
+  console.log("🧹 Cleaning existing data...");
   await prisma.paymentEvent.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.review.deleteMany();
@@ -21,50 +24,336 @@ async function main() {
   await prisma.availabilitySlot.deleteMany();
   await prisma.professionalProfile.deleteMany();
   await prisma.profile.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.verificationToken.deleteMany();
   await prisma.user.deleteMany();
   await prisma.serviceCategory.deleteMany();
   await prisma.location.deleteMany();
   await prisma.commissionRule.deleteMany();
+  await prisma.globalConfig.deleteMany();
 
   console.log("✅ Cleared existing data");
 
-  // 1. Crear categorías de servicio
+  // 1. Configuración global
+  console.log("🔧 Creating global configuration...");
+  await prisma.globalConfig.createMany({
+    data: [
+      {
+        key: "platform_commission",
+        value: 15,
+        description: "Comisión de la plataforma (%)",
+      },
+      {
+        key: "min_session_price",
+        value: 15000,
+        description: "Precio mínimo por sesión (ARS)",
+      },
+      {
+        key: "max_session_duration",
+        value: 120,
+        description: "Duración máxima de sesión (minutos)",
+      },
+      {
+        key: "cancellation_hours",
+        value: 24,
+        description: "Horas mínimas para cancelar sin penalización",
+      },
+    ],
+  });
+
+  // 2. Reglas de comisión
+  console.log("💰 Creating commission rules...");
+  await prisma.commissionRule.create({
+    data: {
+      percentage: 15.0,
+      fixedFee: 500.0,
+      isActive: true,
+    },
+  });
+
+  // 3. Crear ubicaciones realistas de Argentina
+  console.log("📍 Creating locations...");
+  const locations = await Promise.all([
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Ciudad Autónoma de Buenos Aires",
+        city: "Palermo",
+        postalCode: "C1425",
+      },
+    }),
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Ciudad Autónoma de Buenos Aires",
+        city: "Recoleta",
+        postalCode: "C1113",
+      },
+    }),
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Buenos Aires",
+        city: "San Isidro",
+        postalCode: "B1642",
+      },
+    }),
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Córdoba",
+        city: "Córdoba Capital",
+        postalCode: "X5000",
+      },
+    }),
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Santa Fe",
+        city: "Rosario",
+        postalCode: "S2000",
+      },
+    }),
+    prisma.location.create({
+      data: {
+        country: "Argentina",
+        province: "Mendoza",
+        city: "Mendoza Capital",
+        postalCode: "M5500",
+      },
+    }),
+  ]);
+
+  // 4. Crear categorías de servicio más detalladas
+  console.log("🎯 Creating service categories...");
   const categories = await Promise.all([
     prisma.serviceCategory.create({
       data: {
-        name: "Psicología",
-        slug: "psicologia",
-        description: "Servicios de apoyo psicológico y terapia",
+        name: "Psicología Clínica",
+        slug: "psicologia-clinica",
+        description:
+          "Terapia individual, de pareja y familiar. Tratamiento de ansiedad, depresión y trastornos del estado de ánimo.",
         order: 1,
       },
     }),
     prisma.serviceCategory.create({
       data: {
-        name: "Nutrición",
-        slug: "nutricion",
-        description: "Asesoramiento nutricional y planes alimentarios",
+        name: "Nutrición y Dietética",
+        slug: "nutricion-dietetica",
+        description:
+          "Planes nutricionales personalizados, asesoramiento dietético y educación alimentaria.",
         order: 2,
       },
     }),
     prisma.serviceCategory.create({
       data: {
-        name: "Fitness",
-        slug: "fitness",
-        description: "Entrenamiento personal y planes de ejercicio",
+        name: "Kinesiología",
+        slug: "kinesiologia",
+        description:
+          "Rehabilitación física, fisioterapia y tratamiento de lesiones deportivas.",
         order: 3,
       },
     }),
     prisma.serviceCategory.create({
       data: {
-        name: "Coaching",
-        slug: "coaching",
-        description: "Coaching personal y profesional",
+        name: "Medicina General",
+        slug: "medicina-general",
+        description:
+          "Consultas médicas generales, chequeos preventivos y seguimiento de salud.",
         order: 4,
+      },
+    }),
+    prisma.serviceCategory.create({
+      data: {
+        name: "Dermatología",
+        slug: "dermatologia",
+        description:
+          "Cuidado de la piel, tratamiento de acné y consultas dermatológicas.",
+        order: 5,
+      },
+    }),
+    prisma.serviceCategory.create({
+      data: {
+        name: "Cardiología",
+        slug: "cardiologia",
+        description:
+          "Consultas cardiológicas, control de presión arterial y seguimiento cardiovascular.",
+        order: 6,
       },
     }),
   ]);
 
-  console.log("✅ Created service categories:", categories.length);
+  // 5. Crear usuarios realistas
+  console.log("👥 Creating users...");
+  const hashedPassword = await bcrypt.hash("123456", 10);
+
+  // Admin
+  const admin = await prisma.user.create({
+    data: {
+      email: "admin@profesional.com",
+      password: hashedPassword,
+      role: UserRole.ADMIN,
+      status: UserStatus.ACTIVE,
+      firstName: "Administrador",
+      lastName: "Sistema",
+      phone: "+54 11 1234-5678",
+      birthDate: new Date("1985-01-01"),
+      isEmailVerified: true,
+    },
+  });
+
+  // Profesionales
+  const professionals = await Promise.all([
+    prisma.user.create({
+      data: {
+        email: "dra.martinez@psicologia.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "María Elena",
+        lastName: "Martínez",
+        phone: "+54 11 4567-8901",
+        birthDate: new Date("1980-03-15"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "lic.rodriguez@nutricion.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "Carlos",
+        lastName: "Rodríguez",
+        phone: "+54 11 4567-8902",
+        birthDate: new Date("1978-07-22"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "lic.gonzalez@kinesiologia.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "Ana",
+        lastName: "González",
+        phone: "+54 11 4567-8903",
+        birthDate: new Date("1985-11-08"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "dr.lopez@medicina.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "Roberto",
+        lastName: "López",
+        phone: "+54 11 4567-8904",
+        birthDate: new Date("1975-09-12"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "dra.fernandez@dermatologia.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "Laura",
+        lastName: "Fernández",
+        phone: "+54 11 4567-8905",
+        birthDate: new Date("1982-05-30"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "dr.silva@cardiologia.com",
+        password: hashedPassword,
+        role: UserRole.PROFESSIONAL,
+        status: UserStatus.ACTIVE,
+        firstName: "Javier",
+        lastName: "Silva",
+        phone: "+54 11 4567-8906",
+        birthDate: new Date("1977-12-03"),
+        isEmailVerified: true,
+      },
+    }),
+  ]);
+
+  // Clientes
+  const clients = await Promise.all([
+    prisma.user.create({
+      data: {
+        email: "cliente1@email.com",
+        password: hashedPassword,
+        role: UserRole.CLIENT,
+        status: UserStatus.ACTIVE,
+        firstName: "Pedro",
+        lastName: "Gómez",
+        phone: "+54 11 5678-9001",
+        birthDate: new Date("1990-06-15"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "cliente2@email.com",
+        password: hashedPassword,
+        role: UserRole.CLIENT,
+        status: UserStatus.ACTIVE,
+        firstName: "Sofia",
+        lastName: "Ruiz",
+        phone: "+54 11 5678-9002",
+        birthDate: new Date("1992-08-25"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "cliente3@email.com",
+        password: hashedPassword,
+        role: UserRole.CLIENT,
+        status: UserStatus.ACTIVE,
+        firstName: "Diego",
+        lastName: "Morales",
+        phone: "+54 11 5678-9003",
+        birthDate: new Date("1988-04-10"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "cliente4@email.com",
+        password: hashedPassword,
+        role: UserRole.CLIENT,
+        status: UserStatus.ACTIVE,
+        firstName: "Valentina",
+        lastName: "Torres",
+        phone: "+54 11 5678-9004",
+        birthDate: new Date("1995-02-18"),
+        isEmailVerified: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "cliente5@email.com",
+        password: hashedPassword,
+        role: UserRole.CLIENT,
+        status: UserStatus.ACTIVE,
+        firstName: "Martín",
+        lastName: "Herrera",
+        phone: "+54 11 5678-9005",
+        birthDate: new Date("1987-11-22"),
+        isEmailVerified: true,
+      },
+    }),
+  ]);
+
+  console.log("✅ Created users:", users.length);
 
   // 2. Crear ubicaciones
   const locations = await Promise.all([
@@ -339,6 +628,126 @@ Sesiones presenciales y online. Planes de entrenamiento personalizados según tu
   console.log("- Users: 1 client + 3 professionals + 1 admin = 5 total");
   console.log("- Availability slots created for all professionals");
   console.log("- Commission rules configured");
+
+  // ===== CITAS DE PRUEBA =====
+  console.log("📅 Creating sample bookings...");
+
+  // Obtener algunos usuarios y profesionales para crear citas
+  const clients = await prisma.user.findMany({
+    where: { role: UserRole.CLIENT },
+    take: 3,
+  });
+
+  const professionals = await prisma.professionalProfile.findMany({
+    include: { user: true },
+    take: 3,
+  });
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(14, 0, 0, 0); // 14:00 mañana
+
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  nextWeek.setHours(10, 0, 0, 0); // 10:00 próxima semana
+
+  const lastWeek = new Date();
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  lastWeek.setHours(16, 0, 0, 0); // 16:00 semana pasada
+
+  // Cita completada (semana pasada)
+  if (clients[0] && professionals[0]) {
+    await prisma.booking.create({
+      data: {
+        clientId: clients[0].id,
+        professionalId: professionals[0].id,
+        scheduledAt: lastWeek,
+        duration: 60,
+        price: professionals[0].pricePerSession,
+        status: BookingStatus.COMPLETED,
+        meetingStatus: MeetingStatus.COMPLETED,
+        notes: "Consulta inicial - muy satisfecho con el profesional",
+        jitsiRoom: `room-${uuidv4().split("-")[0]}`,
+      },
+    });
+  }
+
+  // Cita confirmada para mañana
+  if (clients[1] && professionals[1]) {
+    await prisma.booking.create({
+      data: {
+        clientId: clients[1].id,
+        professionalId: professionals[1].id,
+        scheduledAt: tomorrow,
+        duration: 50,
+        price: professionals[1].pricePerSession,
+        status: BookingStatus.CONFIRMED,
+        meetingStatus: MeetingStatus.PENDING,
+        notes: "Segunda sesión de seguimiento",
+        jitsiRoom: `room-${uuidv4().split("-")[0]}`,
+      },
+    });
+  }
+
+  // Cita pendiente para próxima semana
+  if (clients[2] && professionals[2]) {
+    await prisma.booking.create({
+      data: {
+        clientId: clients[2].id,
+        professionalId: professionals[2].id,
+        scheduledAt: nextWeek,
+        duration: 45,
+        price: professionals[2].pricePerSession,
+        status: BookingStatus.PENDING_PAYMENT,
+        meetingStatus: MeetingStatus.PENDING,
+        notes: "Primera consulta",
+        jitsiRoom: `room-${uuidv4().split("-")[0]}`,
+      },
+    });
+  }
+
+  // Citas adicionales para tener más datos
+  if (clients[0] && professionals[1]) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(11, 0, 0, 0);
+
+    await prisma.booking.create({
+      data: {
+        clientId: clients[0].id,
+        professionalId: professionals[1].id,
+        scheduledAt: yesterday,
+        duration: 60,
+        price: professionals[1].pricePerSession,
+        status: BookingStatus.COMPLETED,
+        meetingStatus: MeetingStatus.COMPLETED,
+        notes: "Excelente sesión de seguimiento",
+        jitsiRoom: `room-${uuidv4().split("-")[0]}`,
+      },
+    });
+  }
+
+  if (clients[1] && professionals[0]) {
+    const dayAfterTomorrow = new Date();
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    dayAfterTomorrow.setHours(15, 30, 0, 0);
+
+    await prisma.booking.create({
+      data: {
+        clientId: clients[1].id,
+        professionalId: professionals[0].id,
+        scheduledAt: dayAfterTomorrow,
+        duration: 50,
+        price: professionals[0].pricePerSession,
+        status: BookingStatus.CONFIRMED,
+        meetingStatus: MeetingStatus.PENDING,
+        notes: "Sesión de terapia grupal",
+        jitsiRoom: `room-${uuidv4().split("-")[0]}`,
+      },
+    });
+  }
+
+  console.log("✅ Sample bookings created");
 
   console.log("\n🔐 Test credentials:");
   console.log("Client: cliente@ejemplo.com / password123");
