@@ -73,8 +73,8 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold">Reserva Segura</h3>
               <p className="text-muted-foreground">
-                Pagos protegidos con Mercado Pago. Chat integrado y
-                videollamadas para comunicación directa.
+                Pagos protegidos con Mercado Pago. Videollamadas integradas para
+                comunicación directa.
               </p>
             </CardContent>
           </Card>

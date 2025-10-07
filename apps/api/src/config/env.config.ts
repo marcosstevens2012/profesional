@@ -38,12 +38,6 @@ export const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SUPABASE_SIGNED_URL_TTL: z.coerce.number().default(900), // 15 minutes
 
-  // Chat Storage
-  CHAT_STORAGE_PROVIDER: z
-    .enum(["supabase", "vercel-blob"])
-    .default("supabase"),
-  CHAT_STORAGE_BUCKET: z.string().default("profesional-chat-attachments"),
-
   // Mercado Pago
   MERCADOPAGO_ACCESS_TOKEN: z.string().min(1),
   MERCADOPAGO_PUBLIC_KEY: z.string().min(1),

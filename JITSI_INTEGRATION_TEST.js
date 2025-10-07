@@ -80,7 +80,6 @@ MeetingPage        - Página dinámica para acceso a reuniones
 
 3. MEJORAS ADICIONALES:
    - Grabación de sesiones (opcional)
-   - Chat durante videollamada
    - Feedback post-reunión
    - Analytics de uso
 */

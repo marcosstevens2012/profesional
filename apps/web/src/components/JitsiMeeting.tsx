@@ -74,7 +74,6 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
         disableInviteFunctions: true,
         disableAddingParticipants: true,
         enableEmailInStats: false,
-        enableLobbyChat: false,
         toolbarButtons: [
           "microphone",
           "camera",
@@ -85,7 +84,6 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
           "fodeviceselection",
           "hangup",
           "profile",
-          "chat",
           "recording",
           "livestreaming",
           "etherpad",
