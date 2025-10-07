@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base URL de la API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003";
 
 // Cliente axios configurado
 export const apiClient = axios.create({
@@ -15,17 +15,21 @@ export const apiClient = axios.create({
 // Interceptor para agregar token de autorización si existe
 apiClient.interceptors.request.use(
   config => {
-    // Obtener token del localStorage si existe
+    // Obtener token del store de Zustand
     if (typeof window !== "undefined") {
-      const token =
-        localStorage.getItem("auth-token") ||
-        document.cookie
-          .split("; ")
-          .find(row => row.startsWith("auth-token="))
-          ?.split("=")[1];
+      try {
+        // Obtener el estado del store de Zustand
+        const authStorage = localStorage.getItem("auth-storage");
+        if (authStorage) {
+          const authData = JSON.parse(authStorage);
+          const token = authData?.state?.tokens?.accessToken;
 
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        }
+      } catch (error) {
+        console.error("Error getting auth token:", error);
       }
     }
     return config;
@@ -54,9 +58,8 @@ apiClient.interceptors.response.use(
       if (!shouldAllowFailure) {
         // Token expirado o no válido, limpiar almacenamiento
         if (typeof window !== "undefined") {
-          localStorage.removeItem("auth-token");
-          document.cookie =
-            "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          // Limpiar el store de Zustand
+          localStorage.removeItem("auth-storage");
           // Redirigir a login si no estamos ya en la página de login
           if (window.location.pathname !== "/ingresar") {
             window.location.href = "/ingresar";

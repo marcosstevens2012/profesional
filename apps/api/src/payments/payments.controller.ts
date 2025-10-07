@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Logger, Param, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Logger,
+  Param,
+  Post,
+} from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { MercadoPagoService } from "./mercadopago.service";
 import { PaymentsService } from "./payments.service";
@@ -16,40 +25,72 @@ export class PaymentsController {
   // ===== RUTAS ESPECÍFICAS PRIMERO =====
 
   @Post("mp/preference")
-  async createMPPreference(@Body() preferenceDto: any) {
-    this.logger.log("🔥 Creating MP marketplace preference");
-
+  async createPreference(
+    @Body() body: any,
+    @Headers("authorization") authHeader: string
+  ) {
     try {
-      const preference = await this._mercadoPagoService.createPreference({
+      console.log(
+        "🔑 Auth Header received:",
+        authHeader?.substring(0, 20) + "..."
+      );
+      console.log("📦 Body received:", JSON.stringify(body, null, 2));
+
+      // Extract data from the request
+      const { title, amount, professionalSlug, external_reference } = body;
+      console.log("👨‍⚕️ Professional slug:", professionalSlug);
+      console.log("💰 Amount:", amount);
+
+      if (!professionalSlug) {
+        throw new BadRequestException("Professional slug is required");
+      }
+      if (!amount || amount <= 0) {
+        throw new BadRequestException(
+          "Amount is required and must be greater than 0"
+        );
+      }
+
+      // Transform data to MercadoPago format
+      const mpPreferenceData = {
         items: [
           {
-            title: preferenceDto.title || "Sesión con Profesional",
+            title: title || "Consulta con Profesional",
             quantity: 1,
-            unit_price: preferenceDto.amount || 1000,
+            unit_price: amount,
+            category_id: "services", // Category for professional services
+            description: `Consulta profesional con ${professionalSlug}`,
           },
         ],
-        external_reference: `booking-${Date.now()}`,
-      });
-
-      this.logger.log("✅ MP preference created successfully", {
-        id: preference.id,
-      });
-
-      return {
-        success: true,
-        data: {
-          id: preference.id,
-          init_point: preference.init_point,
-          sandbox_init_point: preference.sandbox_init_point,
+        external_reference: external_reference,
+        back_urls: {
+          success: `http://localhost:3001/profesionales/${professionalSlug}/pago/exito`,
+          failure: `http://localhost:3001/profesionales/${professionalSlug}/pago/error`,
+          pending: `http://localhost:3001/profesionales/${professionalSlug}/pago/pendiente`,
+        },
+        auto_return: "approved",
+        payment_methods: {
+          excluded_payment_types: [],
+          excluded_payment_methods: [],
+          installments: 12,
         },
       };
-    } catch (error) {
-      this.logger.error("❌ Error creating MP preference", error);
-      return {
-        success: false,
-        message: "Error creando preferencia de pago",
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
+
+      console.log(
+        "🔧 Transformed MP data:",
+        JSON.stringify(mpPreferenceData, null, 2)
+      );
+
+      // REAL MERCADOPAGO INTEGRATION
+      const preference =
+        await this._mercadoPagoService.createPreference(mpPreferenceData);
+
+      console.log("✅ Real preference created successfully:", preference);
+      return { preference };
+    } catch (error: any) {
+      console.error("❌ Error creating MercadoPago preference:", error);
+      throw new BadRequestException(
+        `Error creating preference: ${error?.message || "Unknown error"}`
+      );
     }
   }
 

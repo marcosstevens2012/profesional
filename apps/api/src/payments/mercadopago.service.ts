@@ -39,6 +39,7 @@ interface MercadoPagoPreference {
   marketplace_fee?: number;
   split_payments?: MercadoPagoMarketplaceSplit[];
   back_urls?: MercadoPagoBackUrls;
+  auto_return?: string;
   notification_url?: string;
   payment_methods?: MercadoPagoPaymentMethods;
   expires?: boolean;

@@ -27,11 +27,13 @@ function ConsultationRequestModal({
   isOpen,
   onClose,
   consultationPrice,
+  professionalSlug,
 }: {
   professional: any;
   isOpen: boolean;
   onClose: () => void;
   consultationPrice: number;
+  professionalSlug: string;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -44,10 +46,22 @@ function ConsultationRequestModal({
       const paymentPreference = await paymentsAPI.createConsultationPayment({
         professionalId: professional.id,
         professionalName: professional.user?.name || "Profesional",
+        professionalSlug: professionalSlug,
         amount: consultationPrice,
       });
 
+      console.log("🔍 Payment preference response:", paymentPreference);
+      console.log("🔍 Init point:", paymentPreference.init_point);
+
+      // Verificar que tenemos el init_point
+      if (!paymentPreference.init_point) {
+        console.error("❌ No init_point found in response:", paymentPreference);
+        alert("Error: No se pudo obtener el enlace de pago");
+        return;
+      }
+
       // Redirigir a MercadoPago
+      console.log("🚀 Redirecting to:", paymentPreference.init_point);
       window.location.href = paymentPreference.init_point;
     } catch (error) {
       console.error("Error en el pago:", error);
@@ -495,6 +509,7 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
         isOpen={showConsultationModal}
         onClose={() => setShowConsultationModal(false)}
         consultationPrice={consultationPrice}
+        professionalSlug={params.slug}
       />
     </div>
   );

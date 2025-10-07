@@ -3,6 +3,7 @@ import { apiClient } from "./client";
 export interface ConsultationPaymentRequest {
   professionalId: number;
   professionalName: string;
+  professionalSlug: string;
   amount: number;
 }
 
@@ -21,6 +22,7 @@ export const paymentsAPI = {
         title: `Consulta con ${data.professionalName}`,
         amount: data.amount,
         professionalId: data.professionalId,
+        professionalSlug: data.professionalSlug,
         external_reference: `consultation_${data.professionalId}_${Date.now()}`,
       }
     );
