@@ -1,14 +1,14 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
-  Delete,
-  UseGuards,
-  Req,
   Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { NotificationsService } from "./notifications.service";
 
