@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { XCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function PaymentFailurePage({
   params,

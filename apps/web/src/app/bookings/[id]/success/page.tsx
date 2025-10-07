@@ -1,9 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function PaymentSuccessPage({
   params,

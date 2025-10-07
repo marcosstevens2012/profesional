@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { Clock } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function PaymentPendingPage({
   params,
