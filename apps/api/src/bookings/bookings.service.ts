@@ -7,10 +7,14 @@ import {
 import { BookingStatus, MeetingStatus } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { PrismaService } from "../database/prisma.service";
+import { MercadoPagoService } from "../payments/mercadopago.service";
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mercadoPagoService: MercadoPagoService
+  ) {}
 
   async create(createBookingDto: any) {
     // Generar jitsiRoom único: slug profesional + UUID
@@ -320,6 +324,114 @@ export class BookingsService {
     return {
       meetings,
       count: meetings.length,
+    };
+  }
+
+  /**
+   * Crea un pago vinculado a una reserva específica
+   */
+  async createPaymentForBooking(bookingId: string, clientId: string) {
+    // 1. Verificar que la booking existe y pertenece al cliente
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        professional: {
+          select: {
+            id: true,
+            pricePerSession: true,
+            user: {
+              select: { name: true, email: true },
+            },
+          },
+        },
+        client: {
+          select: { name: true, email: true },
+        },
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException("Reserva no encontrada");
+    }
+
+    if (booking.clientId !== clientId) {
+      throw new ForbiddenException("No tienes permiso para pagar esta reserva");
+    }
+
+    if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+      throw new BadRequestException(
+        `Esta reserva ya no está pendiente de pago (estado actual: ${booking.status})`
+      );
+    }
+
+    // 2. Verificar que no exista ya un pago para esta booking
+    if (booking.paymentId) {
+      throw new BadRequestException("Ya existe un pago para esta reserva");
+    }
+
+    // 3. Obtener precio del profesional
+    const amount = booking.professional.pricePerSession;
+
+    // 4. Crear preference en MercadoPago (pago directo a plataforma, sin split)
+    const preference = await this.mercadoPagoService.createPreference({
+      items: [
+        {
+          title: `Consulta con ${booking.professional.user.name}`,
+          description: `Consulta profesional - ${booking.scheduledAt.toLocaleDateString()}`,
+          quantity: 1,
+          unit_price: amount.toNumber(),
+          currency_id: "ARS",
+        },
+      ],
+      external_reference: bookingId, // Vinculamos el bookingId
+      payer: {
+        email: booking.client.email,
+        name: booking.client.name || undefined,
+      },
+      back_urls: {
+        success: `${process.env.FRONTEND_URL}/bookings/${bookingId}/success`,
+        failure: `${process.env.FRONTEND_URL}/bookings/${bookingId}/failure`,
+        pending: `${process.env.FRONTEND_URL}/bookings/${bookingId}/pending`,
+      },
+      auto_return: "approved",
+      notification_url: `${process.env.APP_URL}/api/payments/webhook`,
+      metadata: {
+        bookingId,
+        professionalId: booking.professional.id,
+        clientId: booking.clientId,
+      },
+    });
+
+    // 5. Crear Payment y vincularlo a la booking
+    const payment = await this.prisma.payment.create({
+      data: {
+        amount: amount,
+        netAmount: amount, // Por ahora sin comisión
+        status: "PENDING",
+        preferenceId: preference.id,
+        paymentId: null, // Se actualizará cuando MP envíe el webhook
+        gatewayPaymentId: null,
+        metadata: {
+          bookingId,
+          professionalId: booking.professional.id,
+          clientId: booking.clientId,
+        },
+      },
+    });
+
+    // 6. Actualizar booking con el paymentId
+    await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { paymentId: payment.id },
+    });
+
+    // 7. Retornar init_point para redirección a checkout
+    return {
+      paymentId: payment.id,
+      preferenceId: preference.id,
+      init_point: preference.init_point,
+      amount: payment.amount,
+      bookingId: booking.id,
     };
   }
 }

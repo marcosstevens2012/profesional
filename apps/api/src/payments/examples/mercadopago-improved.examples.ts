@@ -1,7 +1,7 @@
 // 📚 EJEMPLOS DE USO DE LA INTEGRACIÓN MEJORADA DE MERCADOPAGO
 // Este archivo muestra cómo usar el nuevo método createImprovedPreference
 
-import { MercadoPagoService } from "./mercadopago.service";
+import { MercadoPagoService } from "../mercadopago.service";
 
 // ============================================================================
 // EJEMPLO 1: Preferencia Básica (Mínimo Recomendado)

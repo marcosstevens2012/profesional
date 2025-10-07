@@ -21,7 +21,7 @@ export enum ServiceType {
 export class CreateImprovedPreferenceDto {
   // Datos del servicio
   @IsString()
-  professionalSlug: string;
+  professionalSlug!: string;
 
   @IsString()
   @IsOptional()
@@ -29,7 +29,7 @@ export class CreateImprovedPreferenceDto {
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @IsEnum(CurrencyId)
   @IsOptional()

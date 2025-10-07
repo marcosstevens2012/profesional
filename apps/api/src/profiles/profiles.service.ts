@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Profile } from "@prisma/client";
 import { PrismaService } from "../database/prisma.service";
+import {
+  ConfigureMercadoPagoDto,
+  MercadoPagoConfigResponse,
+} from "./dto/configure-mercadopago.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 
 @Injectable()
@@ -415,5 +419,76 @@ export class ProfilesService {
     }
 
     return { isActive: professionalProfile.isActive };
+  }
+
+  /**
+   * Configure MercadoPago credentials for professional
+   */
+  async configureMercadoPago(
+    userId: string,
+    dto: ConfigureMercadoPagoDto
+  ): Promise<MercadoPagoConfigResponse> {
+    const professionalProfile =
+      await this._prisma.professionalProfile.findFirst({
+        where: { userId, deletedAt: null },
+      });
+
+    if (!professionalProfile) {
+      throw new NotFoundException(
+        "Professional profile not found for this user"
+      );
+    }
+
+    const updated = await this._prisma.professionalProfile.update({
+      where: { id: professionalProfile.id },
+      data: {
+        mercadoPagoEmail: dto.mercadoPagoEmail,
+        mercadoPagoUserId: dto.mercadoPagoUserId,
+        mpConfiguredAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      mercadoPagoEmail: updated.mercadoPagoEmail!,
+      mercadoPagoUserId: updated.mercadoPagoUserId || undefined,
+      configuredAt: updated.mpConfiguredAt!,
+      message: "MercadoPago credentials configured successfully",
+    };
+  }
+
+  /**
+   * Get MercadoPago configuration status
+   */
+  async getMercadoPagoConfig(userId: string): Promise<{
+    isConfigured: boolean;
+    mercadoPagoEmail?: string;
+    mercadoPagoUserId?: string;
+    configuredAt?: Date;
+  }> {
+    const professionalProfile =
+      await this._prisma.professionalProfile.findFirst({
+        where: { userId, deletedAt: null },
+        select: {
+          mercadoPagoEmail: true,
+          mercadoPagoUserId: true,
+          mpConfiguredAt: true,
+        },
+      });
+
+    if (!professionalProfile) {
+      throw new NotFoundException(
+        "Professional profile not found for this user"
+      );
+    }
+
+    const isConfigured = !!professionalProfile.mercadoPagoEmail;
+
+    return {
+      isConfigured,
+      mercadoPagoEmail: professionalProfile.mercadoPagoEmail || undefined,
+      mercadoPagoUserId: professionalProfile.mercadoPagoUserId || undefined,
+      configuredAt: professionalProfile.mpConfiguredAt || undefined,
+    };
   }
 }

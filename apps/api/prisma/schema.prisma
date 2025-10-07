@@ -124,6 +124,11 @@ model ProfessionalProfile {
   isActive          Boolean  @default(true)
   brandId           String?  // Para futuro white-label
 
+  // MercadoPago credentials - Por ahora NO se usan para split, solo informativo
+  mercadoPagoEmail  String?  // Email de cuenta MP del profesional
+  mercadoPagoUserId String?  // MP User ID (para futuro marketplace split)
+  mpConfiguredAt    DateTime? // Fecha cuando configuró MP
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime? // Soft delete
@@ -191,13 +196,14 @@ model AvailabilitySlot {
 }
 
 enum BookingStatus {
-  PENDING_PAYMENT
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  NO_SHOW
+  PENDING_PAYMENT       // Cliente creó booking, esperando pago
+  WAITING_FOR_PROFESSIONAL  // Pago aprobado, esperando que profesional acepte
+  PENDING               // Profesional aceptó, pendiente de iniciar
+  CONFIRMED             // Confirmado y listo para la reunión
+  IN_PROGRESS           // Reunión en curso
+  COMPLETED             // Reunión finalizada
+  CANCELLED             // Cancelado
+  NO_SHOW               // Cliente no se presentó
 }
 
 enum MeetingStatus {
@@ -340,6 +346,7 @@ model Review {
 enum NotificationType {
   BOOKING_CONFIRMED
   BOOKING_CANCELLED
+  BOOKING_REQUEST      // Nueva solicitud de consulta (pago aprobado)
   PAYMENT_RECEIVED
   REVIEW_RECEIVED
   SYSTEM_NOTIFICATION

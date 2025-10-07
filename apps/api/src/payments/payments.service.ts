@@ -156,22 +156,23 @@ export class PaymentsService {
       external_reference: mpPayment.external_reference,
     });
 
-    // Buscar payment por external_reference
-    const payment = await this._prisma.payment.findFirst({
-      where: {
-        OR: [
-          { id: mpPayment.external_reference },
-          { preferenceId: mpPayment.external_reference },
-        ],
-      },
+    // El external_reference es el bookingId
+    const bookingId = mpPayment.external_reference;
+
+    // Buscar payment por bookingId (a través de la relación con booking)
+    const booking = await this._prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { payment: true, professional: true },
     });
 
-    if (!payment) {
+    if (!booking || !booking.payment) {
       this.logger.warn(
-        `❌ Payment not found for external reference: ${mpPayment.external_reference}`
+        `❌ Booking or payment not found for external reference: ${bookingId}`
       );
       return;
     }
+
+    const payment = booking.payment;
 
     // Mapear status de MP a nuestros status
     let newStatus: PaymentStatus;
@@ -196,17 +197,57 @@ export class PaymentsService {
       data: {
         status: newStatus,
         gatewayPaymentId: mpPayment.id.toString(),
+        paymentId: mpPayment.id.toString(), // MP payment ID
+        paidAt: newStatus === PaymentStatus.COMPLETED ? new Date() : null,
         updatedAt: new Date(),
       },
     });
 
-    // Si está aprobado, procesar comisiones y split
+    // Si está aprobado, actualizar booking y procesar comisiones
     if (newStatus === PaymentStatus.COMPLETED) {
+      // Actualizar booking a WAITING_FOR_PROFESSIONAL
+      await this._prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "WAITING_FOR_PROFESSIONAL",
+        },
+      });
+
+      this.logger.log("✅ Booking updated to WAITING_FOR_PROFESSIONAL", {
+        booking_id: bookingId,
+        professional_id: booking.professionalId,
+      });
+
+      // Crear notificación para el profesional
+      await this._prisma.notification.create({
+        data: {
+          userId: booking.professional.userId, // Notificar al usuario del profesional
+          type: "BOOKING_REQUEST",
+          title: "Nueva solicitud de consulta",
+          message: `Tienes una nueva solicitud de consulta pagada. El cliente ya realizó el pago de $${payment.amount}.`,
+          payload: {
+            bookingId: booking.id,
+            amount: payment.amount.toString(),
+            paymentId: payment.id,
+            clientId: booking.clientId,
+          },
+        },
+      });
+
+      this.logger.log("✅ Notification created for professional", {
+        professional_user_id: booking.professional.userId,
+        booking_id: bookingId,
+      });
+
+      // TODO: Enviar email al profesional
+      // await this.emailService.sendBookingRequestEmail(booking);
+
       await this.processApprovedPayment(payment, mpPayment);
     }
 
     this.logger.log("✅ Payment notification processed", {
       payment_id: payment.id,
+      booking_id: bookingId,
       new_status: newStatus,
       mp_status: mpPayment.status,
     });

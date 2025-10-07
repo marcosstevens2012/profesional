@@ -93,4 +93,15 @@ export class BookingsController {
   remove(@Param("id") id: string) {
     return this._bookingsService.remove(id);
   }
+
+  @Post(":id/payment")
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.CLIENT)
+  @ApiOperation({ summary: "Create payment for booking" })
+  createPayment(@Param("id") bookingId: string, @Req() req: any) {
+    return this._bookingsService.createPaymentForBooking(
+      bookingId,
+      req.user.userId
+    );
+  }
 }

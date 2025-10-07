@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -13,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Public, Role, Roles } from "../common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
+import { ConfigureMercadoPagoDto } from "./dto/configure-mercadopago.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ProfilesService } from "./profiles.service";
 
@@ -97,5 +99,21 @@ export class ProfilesController {
   @ApiOperation({ summary: "Get professional active status" })
   getActiveStatus(@Req() req: any) {
     return this._profilesService.getProfessionalActiveStatus(req.user.userId);
+  }
+
+  @Put("me/mercadopago")
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.PROFESSIONAL)
+  @ApiOperation({ summary: "Configure MercadoPago credentials" })
+  configureMercadoPago(@Req() req: any, @Body() dto: ConfigureMercadoPagoDto) {
+    return this._profilesService.configureMercadoPago(req.user.userId, dto);
+  }
+
+  @Get("me/mercadopago")
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.PROFESSIONAL)
+  @ApiOperation({ summary: "Get MercadoPago configuration status" })
+  getMercadoPagoConfig(@Req() req: any) {
+    return this._profilesService.getMercadoPagoConfig(req.user.userId);
   }
 }

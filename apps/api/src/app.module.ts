@@ -18,6 +18,7 @@ import { ConfigModule as GlobalConfigModule } from "./config/config.module";
 import { DatabaseModule } from "./database/database.module";
 import { ExamplesModule } from "./examples/examples.module";
 import { HealthModule } from "./health/health.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { SearchModule } from "./search/search.module";
@@ -78,6 +79,7 @@ import { UsersModule } from "./users/users.module";
     SearchModule,
     PaymentsModule,
     BookingsModule,
+    NotificationsModule,
     ExamplesModule,
     AdminModule,
     GlobalConfigModule,
