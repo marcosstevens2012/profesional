@@ -8,6 +8,9 @@
     "tsconfig/**",
     "editorconfig/**"
   ],
+  "scripts": {
+    "build": "echo 'No build needed for config package'"
+  },
   "exports": {
     "./eslint/base": "./eslint/base.js",
     "./eslint/next": "./eslint/next.js",
