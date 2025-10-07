@@ -13,30 +13,33 @@ import {
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  const { data: notifications = [], refetch } = useNotifications(filter);
-  const markAsReadMutation = useMarkNotificationAsRead();
-  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
-  const deleteMutation = useDeleteNotification();
+  const { data: notifications = [], refetch } = useNotifications({
+    unreadOnly: filter === "unread",
+  });
+  const { markAsRead } = useMarkNotificationAsRead();
+  const { markAllAsRead } = useMarkAllNotificationsAsRead();
+  const { deleteNotification } = useDeleteNotification();
 
   const handleMarkAsRead = async (notificationId: string) => {
-    await markAsReadMutation.mutateAsync(notificationId);
+    await markAsRead(notificationId);
     refetch();
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsReadMutation.mutateAsync();
+    await markAllAsRead();
     refetch();
   };
 
   const handleDelete = async (notificationId: string) => {
     if (confirm("¿Estás seguro de eliminar esta notificación?")) {
-      await deleteMutation.mutateAsync(notificationId);
+      await deleteNotification(notificationId);
       refetch();
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput: string | Date) => {
+    const date =
+      typeof dateInput === "string" ? new Date(dateInput) : dateInput;
     return date.toLocaleDateString("es-AR", {
       day: "numeric",
       month: "long",
@@ -63,7 +66,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.readAt).length;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -131,7 +134,7 @@ export default function NotificationsPage() {
                 <div
                   key={notification.id}
                   className={`p-4 transition-colors ${
-                    !notification.read ? "bg-blue-50" : "hover:bg-gray-50"
+                    !notification.readAt ? "bg-blue-50" : "hover:bg-gray-50"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -143,12 +146,12 @@ export default function NotificationsPage() {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3
                           className={`font-semibold text-gray-900 ${
-                            !notification.read ? "font-bold" : ""
+                            !notification.readAt ? "font-bold" : ""
                           }`}
                         >
                           {notification.title}
                         </h3>
-                        {!notification.read && (
+                        {!notification.readAt && (
                           <span className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
                         )}
                       </div>
@@ -174,7 +177,7 @@ export default function NotificationsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {!notification.read && (
+                      {!notification.readAt && (
                         <button
                           onClick={() => handleMarkAsRead(notification.id)}
                           className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"

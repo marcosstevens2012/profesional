@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, X, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import {
   useNotifications,
@@ -15,9 +15,11 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
-  const { data: notifications = [], refetch } = useNotifications("unread");
-  const markAsReadMutation = useMarkNotificationAsRead();
-  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
+  const { data: notifications = [], refetch } = useNotifications({
+    unreadOnly: true,
+  });
+  const { markAsRead } = useMarkNotificationAsRead();
+  const { markAllAsRead } = useMarkAllNotificationsAsRead();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -35,17 +37,18 @@ export default function NotificationBell() {
   }, []);
 
   const handleMarkAsRead = async (notificationId: string) => {
-    await markAsReadMutation.mutateAsync(notificationId);
+    await markAsRead(notificationId);
     refetch();
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsReadMutation.mutateAsync();
+    await markAllAsRead();
     refetch();
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput: string | Date) => {
+    const date =
+      typeof dateInput === "string" ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diffInMinutes = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60)

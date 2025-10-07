@@ -5,10 +5,10 @@ interface CreatePaymentResponse {
   preferenceId: string;
   init_point: string;
   amount: number;
-  bookingId: string;
 }
 
 interface UseCreateBookingPaymentReturn {
+  // eslint-disable-next-line no-unused-vars
   createPayment: (bookingId: string) => Promise<CreatePaymentResponse>;
   isLoading: boolean;
   error: Error | null;

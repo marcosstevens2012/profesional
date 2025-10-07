@@ -12,3 +12,9 @@ build
 coverage
 *.tgz
 *.tar.gz
+
+# Generated TypeScript files
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts.map

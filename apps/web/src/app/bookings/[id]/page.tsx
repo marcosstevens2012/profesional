@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Calendar, Clock, User, MapPin, Video } from "lucide-react";
+import { Calendar, Clock, User, Video } from "lucide-react";
 import PaymentCheckout from "@/components/PaymentCheckout";
 
 // Este es un ejemplo de cómo integrar el componente PaymentCheckout

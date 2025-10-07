@@ -6,8 +6,12 @@ cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = [
-  "echo 'Building workspace with Turbo...'",
-  "pnpm turbo build --filter=@profesional/api... --filter=@profesional/web..."
+  "echo 'Building packages first...'",
+  "pnpm --filter @profesional/contracts build",
+  "pnpm --filter @profesional/ui build",
+  "echo 'Building applications...'",
+  "pnpm --filter @profesional/api build",
+  "pnpm --filter @profesional/web build"
 ]
 
 [start]
