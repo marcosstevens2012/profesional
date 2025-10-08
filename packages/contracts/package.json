@@ -1,9 +1,18 @@
 {
   "name": "@profesional/contracts",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcosstevens2012/profesional.git",
+    "directory": "packages/contracts"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "@profesional:registry": "https://npm.pkg.github.com"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
