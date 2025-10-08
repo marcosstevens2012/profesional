@@ -33,11 +33,13 @@
 - **`migrate-api.sh`** ✅ Ya ejecutado
   - Migró el código de la API al nuevo proyecto
   - Creó backup automático
+
   - Inicializó Git en el nuevo proyecto
 
 - **`setup-api.sh`** ✅ Ya ejecutado
   - Configuró package.json independiente
   - Eliminó referencias a workspace
+
   - Configuró TypeScript, ESLint, Prettier
 
 - **`cleanup-monorepo.sh`** ⏳ Ejecutar después
@@ -88,6 +90,7 @@
 ### ✅ Configuración de CORS
 
 - Pre-configurada en la API
+
 - Variables de entorno para flexibilidad
 - Documentación completa en CORS_SETUP.md
 
@@ -97,6 +100,7 @@
 
 - Crear token: https://github.com/settings/tokens
 - Ver packages: https://github.com/marcosstevens2012/profesional/packages
+
 - Docs: https://docs.github.com/en/packages
 
 ### Despliegue

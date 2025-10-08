@@ -1,8 +1,8 @@
 {
-  "name": "profesional",
+  "name": "profesional-frontend",
   "private": true,
   "version": "0.1.0",
-  "description": "Monorepo profesional con Turborepo, Next.js y NestJS",
+  "description": "Frontend para la plataforma Profesional con Next.js",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
