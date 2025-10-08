@@ -2,12 +2,16 @@
   "name": "profesional-frontend",
   "private": true,
   "version": "0.1.0",
-  "description": "Frontend para la plataforma Profesional con Next.js",
+  "description": "Frontend monorepo para la plataforma Profesional - Next.js + pnpm workspaces",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@8.15.6",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcosstevens2012/profesional.git"
+  },
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
