@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @profesional/contracts build && pnpm --filter @profesional/ui build && pnpm --filter @profesional/web build"
+buildCommand = "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @profesional/contracts build && pnpm --filter @profesional/web build"
 
 [deploy]
 startCommand = "cd apps/web && pnpm start"
