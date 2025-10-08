@@ -24,6 +24,8 @@
     "next": "14.0.4",
     "next-seo": "^6.4.0",
     "next-themes": "^0.2.1",
+    "posthog-js": "^1.273.1",
+    "posthog-node": "^5.9.3",
     "react": "^18",
     "react-dom": "^18",
     "react-intl": "^6.5.5",
