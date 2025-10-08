@@ -10,7 +10,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import { ArrowLeft, MapPin, MessageCircle, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

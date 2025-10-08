@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import {
   AlertTriangle,
   Calendar,
@@ -117,7 +117,7 @@ export default function PagosAdmin() {
     }
   };
 
-  const filteredPayments = payments.filter(payment => {
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.gatewayPaymentId
@@ -207,10 +207,10 @@ export default function PagosAdmin() {
     );
   };
 
-  const failedPayments = payments.filter(p =>
+  const failedPayments = payments.filter((p) =>
     ["rejected", "cancelled", "charged_back"].includes(p.status)
   );
-  const pendingPayments = payments.filter(p =>
+  const pendingPayments = payments.filter((p) =>
     ["pending", "in_process", "in_mediation"].includes(p.status)
   );
 
@@ -264,14 +264,14 @@ export default function PagosAdmin() {
                 type="text"
                 placeholder="Buscar por ID, cliente o profesional..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los estados</option>
@@ -300,7 +300,7 @@ export default function PagosAdmin() {
 
       {/* Payments List */}
       <div className="space-y-4">
-        {filteredPayments.map(payment => (
+        {filteredPayments.map((payment) => (
           <Card key={payment.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -499,7 +499,7 @@ export default function PagosAdmin() {
                 <div>
                   <h3 className="font-semibold mb-3">Historial de Eventos</h3>
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {selectedPayment.events.map(event => (
+                    {selectedPayment.events.map((event) => (
                       <div
                         key={event.id}
                         className="border rounded p-3 bg-gray-50"

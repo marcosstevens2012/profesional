@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@profesional/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import {
   AlertTriangle,
   Calendar,

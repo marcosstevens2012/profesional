@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import { Calendar, DollarSign, Star, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth/auth-store";
@@ -226,7 +226,7 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
       {/* Tabs Navigation */}
       <div className="border-b">
         <nav className="flex space-x-8">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
@@ -406,12 +406,15 @@ function AppointmentCard({
 
 function ClientsTab({ appointments }: { appointments: any[] }) {
   const uniqueClients = appointments.reduce((acc: any[], appointment: any) => {
-    if (appointment.client && !acc.find(c => c.id === appointment.client.id)) {
+    if (
+      appointment.client &&
+      !acc.find((c) => c.id === appointment.client.id)
+    ) {
       acc.push({
         ...appointment.client,
         lastAppointment: appointment.scheduledAt,
         totalAppointments: appointments.filter(
-          a => a.client?.id === appointment.client.id
+          (a) => a.client?.id === appointment.client.id
         ).length,
       });
     }
@@ -478,7 +481,7 @@ function EarningsTab({
   stats: any;
 }) {
   const completedAppointments = appointments.filter(
-    apt => apt.status === "COMPLETED"
+    (apt) => apt.status === "COMPLETED"
   );
 
   return (

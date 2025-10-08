@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth/auth-hooks";
 import { getButtonClasses } from "@/lib/utils";
-import { Button } from "@profesional/ui";
+import { Button } from "@/components/ui";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -33,7 +33,7 @@ export function Header() {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            {navigation.map(item => (
+            {navigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

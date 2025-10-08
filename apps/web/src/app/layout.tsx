@@ -3,10 +3,10 @@ import { Header } from "@/components/header";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/lib/theme-provider";
-import "@profesional/ui/styles";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 import { type ReactNode } from "react";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

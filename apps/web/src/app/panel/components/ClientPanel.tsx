@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import {
   Calendar,
   CreditCard,
@@ -179,7 +179,7 @@ export default function ClientPanel({ user }: ClientPanelProps) {
       {/* Tabs Navigation */}
       <div className="border-b">
         <nav className="flex space-x-8">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button

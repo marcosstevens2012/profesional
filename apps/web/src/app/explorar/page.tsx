@@ -6,7 +6,7 @@ import { FrontendProfessional } from "@/lib/adapters/professional-adapter";
 import { useSearchProfessionals } from "@/lib/hooks/use-search";
 import { useServiceCategories } from "@/lib/hooks/use-services";
 import { formatLocation } from "@/lib/utils/location-utils";
-import { Button, Card, CardContent } from "@profesional/ui";
+import { Button, Card, CardContent } from "@/components/ui";
 import { Filter, MapPin, Search, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,7 +30,7 @@ export default function ExplorarPage() {
   const { data: _categories } = useServiceCategories();
 
   const handleSearch = () => {
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       query: searchQuery,
       page: 1, // Reset to first page
@@ -39,7 +39,7 @@ export default function ExplorarPage() {
 
   const handleLoadMore = () => {
     if (professionals?.pagination?.hasNext) {
-      setSearchFilters(prev => ({
+      setSearchFilters((prev) => ({
         ...prev,
         page: (prev.page || 1) + 1,
       }));
@@ -73,7 +73,7 @@ export default function ExplorarPage() {
                 <Input
                   placeholder="¿Qué tipo de profesional buscás?"
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>

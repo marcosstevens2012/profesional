@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@profesional/ui", "@marcosstevens2012/contracts"],
+  transpilePackages: ["@marcosstevens2012/contracts"],
   experimental: {
     externalDir: true,
   },

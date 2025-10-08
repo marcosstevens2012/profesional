@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import {
   BarChart3,
   Calendar,
@@ -90,7 +90,7 @@ export default function AdminPanel({ user }: AdminPanelProps) {
           );
           const clients = usersData.filter((u: any) => u.role === "CLIENT");
 
-          setDashboardData(prev => ({
+          setDashboardData((prev) => ({
             ...prev,
             totalUsers: usersData.length,
             totalProfessionals: professionals.length,
@@ -105,7 +105,7 @@ export default function AdminPanel({ user }: AdminPanelProps) {
             .filter((b: any) => b.status === "COMPLETED")
             .reduce((sum: number, b: any) => sum + Number(b.price), 0);
 
-          setDashboardData(prev => ({
+          setDashboardData((prev) => ({
             ...prev,
             totalBookings: bookingsData.length,
             totalRevenue,
@@ -229,7 +229,7 @@ export default function AdminPanel({ user }: AdminPanelProps) {
       {/* Tabs Navigation */}
       <div className="border-b">
         <nav className="flex space-x-8">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button

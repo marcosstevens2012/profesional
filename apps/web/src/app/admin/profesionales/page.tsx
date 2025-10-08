@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import {
   Calendar,
   CheckCircle,
@@ -133,7 +133,7 @@ export default function ProfesionalesAdmin() {
     }
   };
 
-  const filteredProfessionals = professionals.filter(prof => {
+  const filteredProfessionals = professionals.filter((prof) => {
     const matchesSearch =
       prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prof.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -211,7 +211,7 @@ export default function ProfesionalesAdmin() {
           >
             <Clock size={16} className="mr-2" />
             Pendientes (
-            {professionals.filter(p => p.status === "PENDING").length})
+            {professionals.filter((p) => p.status === "PENDING").length})
           </Button>
         </div>
       </div>
@@ -229,14 +229,14 @@ export default function ProfesionalesAdmin() {
                 type="text"
                 placeholder="Buscar por nombre, email o ubicación..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los estados</option>
@@ -260,7 +260,7 @@ export default function ProfesionalesAdmin() {
 
       {/* Professionals Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredProfessionals.map(professional => (
+        {filteredProfessionals.map((professional) => (
           <Card
             key={professional.id}
             className="hover:shadow-lg transition-shadow"

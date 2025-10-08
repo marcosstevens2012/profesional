@@ -2,7 +2,7 @@
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { useAuth } from "@/lib/auth/auth-hooks";
-import { Card, CardContent } from "@profesional/ui";
+import { Card, CardContent } from "@/components/ui";
 import { Loader2 } from "lucide-react";
 
 // Import specific panels for each role

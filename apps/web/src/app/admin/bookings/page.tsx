@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@profesional/ui";
+} from "@/components/ui";
 import {
   AlertTriangle,
   CheckCircle,
@@ -124,7 +124,7 @@ export default function BookingsAdmin() {
     await updateBookingStatus(bookingId, "CANCELLED");
   };
 
-  const filteredBookings = bookings.filter(booking => {
+  const filteredBookings = bookings.filter((booking) => {
     const matchesSearch =
       booking.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -244,7 +244,7 @@ export default function BookingsAdmin() {
           >
             <Clock size={16} className="mr-2" />
             Pendientes (
-            {bookings.filter(b => b.status === "PENDING_PAYMENT").length})
+            {bookings.filter((b) => b.status === "PENDING_PAYMENT").length})
           </Button>
           <Button
             variant="outline"
@@ -253,7 +253,7 @@ export default function BookingsAdmin() {
           >
             <Video size={16} className="mr-2" />
             En Progreso (
-            {bookings.filter(b => b.status === "IN_PROGRESS").length})
+            {bookings.filter((b) => b.status === "IN_PROGRESS").length})
           </Button>
         </div>
       </div>
@@ -271,14 +271,14 @@ export default function BookingsAdmin() {
                 type="text"
                 placeholder="Buscar por título, cliente o profesional..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Todos los estados</option>
@@ -305,7 +305,7 @@ export default function BookingsAdmin() {
 
       {/* Bookings List */}
       <div className="space-y-4">
-        {filteredBookings.map(booking => (
+        {filteredBookings.map((booking) => (
           <Card key={booking.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

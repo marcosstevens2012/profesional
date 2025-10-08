@@ -1,5 +1,5 @@
 import { getButtonClasses } from "@/lib/utils";
-import { Card, CardContent } from "@profesional/ui";
+import { Card, CardContent } from "@/components/ui";
 import { ArrowRight, Search, Shield, Star } from "lucide-react";
 import { type Metadata } from "next";
 import Link from "next/link";
