@@ -1,4 +1,4 @@
-import { PaginatedResponse, SearchFilters } from "@profesional/contracts";
+import { PaginatedResponse, SearchFilters } from "@marcosstevens2012/contracts";
 import { useQuery } from "@tanstack/react-query";
 import { FrontendProfessional } from "../adapters/professional-adapter";
 import { searchAPI, SearchSuggestion } from "../api/search";

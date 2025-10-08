@@ -3,7 +3,7 @@ import {
   PaginatedResponse,
   ProfessionalProfile,
   UpdateProfessionalProfileDTO,
-} from "@profesional/contracts";
+} from "@marcosstevens2012/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { profilesAPI } from "../api/profiles";
 import { useAuthStore } from "../auth/auth-store";

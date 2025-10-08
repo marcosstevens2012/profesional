@@ -1,4 +1,4 @@
-import { PaginatedResponse, SearchFilters } from "@profesional/contracts";
+import { PaginatedResponse, SearchFilters } from "@marcosstevens2012/contracts";
 import {
   adaptPaginatedProfessionals,
   FrontendProfessional,

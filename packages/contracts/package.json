@@ -1,6 +1,6 @@
 {
-  "name": "@profesional/contracts",
-  "version": "0.1.0",
+  "name": "@marcosstevens2012/contracts",
+  "version": "0.1.1",
   "private": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +11,7 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
-    "@profesional:registry": "https://npm.pkg.github.com"
+    "@marcosstevens2012:registry": "https://npm.pkg.github.com"
   },
   "exports": {
     ".": {

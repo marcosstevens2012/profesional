@@ -1,4 +1,4 @@
-import { User } from "@profesional/contracts";
+import { User } from "@marcosstevens2012/contracts";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 

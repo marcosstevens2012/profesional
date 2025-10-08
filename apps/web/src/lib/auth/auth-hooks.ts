@@ -5,7 +5,7 @@ import {
   RegisterRequest,
   ResetPasswordRequest,
   VerifyEmailRequest,
-} from "@profesional/contracts";
+} from "@marcosstevens2012/contracts";
 import { useCallback, useEffect } from "react";
 import { authAPI } from "./auth-api";
 import { useAuthStore } from "./auth-store";

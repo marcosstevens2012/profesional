@@ -1,4 +1,4 @@
-import { ProfessionalProfile } from "@profesional/contracts";
+import { ProfessionalProfile } from "@marcosstevens2012/contracts";
 
 // Tipo extendido para los datos mock del profesional
 export interface ProfessionalProfileExtended extends ProfessionalProfile {

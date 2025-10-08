@@ -1,4 +1,4 @@
-import { ServiceCategory } from "@profesional/contracts";
+import { ServiceCategory } from "@marcosstevens2012/contracts";
 import { useQuery } from "@tanstack/react-query";
 import { servicesAPI } from "../api/services";
 
