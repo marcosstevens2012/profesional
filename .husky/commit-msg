@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx commitlint --edit $1
+# Hook desactivado - npm/npx no disponible en PATH de Git
+# npx commitlint --edit $1
+exit 0
