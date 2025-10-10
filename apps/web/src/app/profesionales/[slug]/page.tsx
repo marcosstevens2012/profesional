@@ -1,9 +1,6 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { paymentsAPI } from "@/lib/api/payments";
-import { useProfileBySlug } from "@/lib/hooks/use-profiles";
-import { formatLocation } from "@/lib/utils/location-utils";
 import {
   Button,
   Card,
@@ -11,6 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { paymentsAPI } from "@/lib/api/payments";
+import { useProfileBySlug } from "@/lib/hooks/use-profiles";
+import { formatLocation } from "@/lib/utils/location-utils";
 import { ArrowLeft, MapPin, MessageCircle, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -42,6 +42,13 @@ function ConsultationRequestModal({
   const handlePayment = async () => {
     setLoading(true);
     try {
+      console.log("🚀 Iniciando pago para:", {
+        professionalId: professional.id,
+        professionalName: professional.user?.name || "Profesional",
+        professionalSlug: professionalSlug,
+        amount: consultationPrice,
+      });
+
       // Crear preferencia de pago en MercadoPago
       const paymentPreference = await paymentsAPI.createConsultationPayment({
         professionalId: professional.id,
@@ -50,11 +57,11 @@ function ConsultationRequestModal({
         amount: consultationPrice,
       });
 
-      console.log("🔍 Payment preference response:", paymentPreference);
-      console.log("🔍 Init point:", paymentPreference.init_point);
+      console.log("✅ Payment preference recibida:", paymentPreference);
+      console.log("✅ Init point:", paymentPreference.init_point);
 
       // Verificar que tenemos el init_point
-      if (!paymentPreference.init_point) {
+      if (!paymentPreference || !paymentPreference.init_point) {
         console.error("❌ No init_point found in response:", paymentPreference);
         alert("Error: No se pudo obtener el enlace de pago");
         return;
@@ -63,9 +70,15 @@ function ConsultationRequestModal({
       // Redirigir a MercadoPago
       console.log("🚀 Redirecting to:", paymentPreference.init_point);
       window.location.href = paymentPreference.init_point;
-    } catch (error) {
-      console.error("Error en el pago:", error);
-      alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
+    } catch (error: any) {
+      console.error("❌ Error completo en el pago:", error);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error response data:", error.response?.data);
+      console.error("❌ Error message:", error.message);
+
+      const errorMessage =
+        error.response?.data?.message || error.message || "Error desconocido";
+      alert(`Error al procesar el pago: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
