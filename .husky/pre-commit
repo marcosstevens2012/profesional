@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Hook desactivado - npm/npx no disponible en PATH de Git
-# npx lint-staged
-exit 0
+# Asegurar que Node.js esté en el PATH
+export PATH="/usr/local/bin:$PATH"
+
+/usr/local/bin/npx lint-staged
