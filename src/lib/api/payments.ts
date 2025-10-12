@@ -1,55 +1,52 @@
 import { apiClient } from "./client";
 
 export interface ConsultationPaymentRequest {
-  bookingId: string;
-  customerId: string;
-  professionalId: string;
-  professionalMPUserId: number;
-  amount: number;
   title: string;
-  description?: string;
-  payerEmail?: string;
+  amount: number;
+  professionalSlug: string;
 }
 
 export interface MercadoPagoPreference {
   init_point: string;
-  id: string;
+  sandbox_init_point: string;
+  preference_id: string;
+  external_reference: string;
 }
 
 export interface MercadoPagoPreferenceResponse {
-  preference: MercadoPagoPreference;
+  success: boolean;
+  preference_id: string;
+  init_point: string;
+  sandbox_init_point: string;
+  external_reference: string;
+  auto_return_enabled: boolean;
+  back_urls?: {
+    success: string;
+    failure: string;
+    pending: string;
+  };
+  metadata?: {
+    amount: number;
+    professional_slug: string;
+    is_sandbox: boolean;
+  };
 }
 
 export const paymentsAPI = {
   async createConsultationPayment(
     data: ConsultationPaymentRequest
-  ): Promise<MercadoPagoPreference> {
+  ): Promise<MercadoPagoPreferenceResponse> {
     try {
       const response = await apiClient.post<MercadoPagoPreferenceResponse>(
         "/payments/mp/preference",
         {
-          bookingId: data.bookingId,
-          customerId: data.customerId,
-          professionalId: data.professionalId,
-          professionalMPUserId: data.professionalMPUserId,
-          amount: data.amount,
           title: data.title,
-          description: data.description,
-          payerEmail: data.payerEmail,
+          amount: data.amount,
+          professionalSlug: data.professionalSlug,
         }
       );
 
-      // Extraer el objeto preference de la respuesta
-      if (response.data.preference) {
-        return response.data.preference;
-      }
-
-      // Si no está en preference, tal vez esté directamente en data
-      if ("init_point" in response.data) {
-        return response.data as unknown as MercadoPagoPreference;
-      }
-
-      throw new Error("No se pudo obtener init_point de la respuesta");
+      return response.data;
     } catch (error) {
       console.error("❌ Error en createConsultationPayment:", error);
       throw error;
