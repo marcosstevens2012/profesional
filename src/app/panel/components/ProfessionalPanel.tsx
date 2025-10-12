@@ -7,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { useAuthStore } from "@/lib/auth/auth-store";
 import { Calendar, DollarSign, Star, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/lib/auth/auth-store";
 
 interface ProfessionalPanelProps {
   user: {
@@ -21,7 +21,7 @@ interface ProfessionalPanelProps {
 }
 
 const tabs = [
-  { id: "appointments", label: "Citas", icon: Calendar },
+  { id: "appointments", label: "Consultas", icon: Calendar },
   { id: "clients", label: "Clientes", icon: Users },
   { id: "earnings", label: "Ingresos", icon: DollarSign },
   { id: "reviews", label: "Reseñas", icon: Star },
@@ -152,7 +152,7 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
         </div>
         <div className="flex space-x-3">
           <Button variant="outline">Configurar Disponibilidad</Button>
-          <Button>Nueva Cita</Button>
+          <Button>Nueva Consulta</Button>
         </div>
       </div>
 
@@ -166,7 +166,9 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalAppointments}</p>
-                <p className="text-sm text-muted-foreground">Citas Totales</p>
+                <p className="text-sm text-muted-foreground">
+                  Consultas Totales
+                </p>
               </div>
             </div>
           </CardContent>
@@ -265,7 +267,7 @@ function AppointmentsTab({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando citas...</p>
+          <p className="text-muted-foreground">Cargando consultas...</p>
         </div>
       </div>
     );
@@ -277,10 +279,11 @@ function AppointmentsTab({
         <CardContent className="p-8 text-center">
           <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
           <h3 className="text-xl font-semibold mb-2">
-            No tienes citas programadas
+            No tienes consultas programadas
           </h3>
           <p className="text-gray-600 mb-4">
-            Las nuevas citas aparecerán aquí cuando los clientes las reserven
+            Las nuevas consultas aparecerán aquí cuando los clientes las
+            reserven
           </p>
           <Button>Configurar Disponibilidad</Button>
         </CardContent>
@@ -301,12 +304,12 @@ function AppointmentsTab({
       {/* Upcoming Appointments */}
       <div>
         <h3 className="text-lg font-semibold mb-4">
-          Próximas Citas ({upcomingAppointments.length})
+          Próximas Consultas ({upcomingAppointments.length})
         </h3>
         {upcomingAppointments.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
-              No tienes citas próximas programadas
+              No tienes consultas próximas programadas
             </CardContent>
           </Card>
         ) : (
@@ -324,7 +327,7 @@ function AppointmentsTab({
 
       {/* Recent Appointments */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Citas Recientes</h3>
+        <h3 className="text-lg font-semibold mb-4">Consultas Recientes</h3>
         <div className="space-y-4">
           {recentAppointments.map((appointment: any) => (
             <AppointmentCard
@@ -437,7 +440,7 @@ function ClientsTab({ appointments }: { appointments: any[] }) {
               Aún no tienes clientes
             </h3>
             <p className="text-gray-600">
-              Los clientes aparecerán aquí después de sus primeras citas
+              Los clientes aparecerán aquí después de sus primeras consultas
             </p>
           </CardContent>
         </Card>
@@ -452,9 +455,9 @@ function ClientsTab({ appointments }: { appointments: any[] }) {
                     {client.email}
                   </p>
                   <div className="text-sm">
-                    <p>Citas: {client.totalAppointments}</p>
+                    <p>Consultas: {client.totalAppointments}</p>
                     <p>
-                      Última cita:{" "}
+                      Última consulta:{" "}
                       {new Date(client.lastAppointment).toLocaleDateString(
                         "es-AR"
                       )}
@@ -501,7 +504,9 @@ function EarningsTab({
           <CardContent className="p-6 text-center">
             <TrendingUp className="h-8 w-8 mx-auto mb-2 text-blue-600" />
             <p className="text-2xl font-bold">{completedAppointments.length}</p>
-            <p className="text-sm text-muted-foreground">Citas Completadas</p>
+            <p className="text-sm text-muted-foreground">
+              Consultas Completadas
+            </p>
           </CardContent>
         </Card>
 
@@ -516,7 +521,9 @@ function EarningsTab({
                   ).toLocaleString()
                 : 0}
             </p>
-            <p className="text-sm text-muted-foreground">Promedio por Cita</p>
+            <p className="text-sm text-muted-foreground">
+              Promedio por Consulta
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -216,7 +216,7 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
             <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
               <li>Acceder a su cámara y micrófono</li>
               <li>Procesar audio y video para la sesión</li>
-              <li>Permitir grabación si es solicitada</li>
+              <li>Permitir grabación si es soliconsultada</li>
             </ul>
 
             <p className="text-sm text-gray-500 mb-4">

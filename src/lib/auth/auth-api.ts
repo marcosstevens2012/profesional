@@ -94,7 +94,9 @@ class AuthAPI {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "Error al solicitar restablecimiento");
+      throw new Error(
+        error.message || "Error al soliconsultar restablecimiento"
+      );
     }
 
     return response.json();

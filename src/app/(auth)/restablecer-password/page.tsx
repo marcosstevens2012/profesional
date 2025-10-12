@@ -36,7 +36,7 @@ export default function ResetPasswordPage() {
           </AlertDescription>
         </Alert>
         <Button asChild className="w-full">
-          <Link href="/recuperar-password">Solicitar nuevo enlace</Link>
+          <Link href="/recuperar-password">Soliconsultar nuevo enlace</Link>
         </Button>
       </div>
     );

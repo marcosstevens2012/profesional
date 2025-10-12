@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { useAuthStore } from "@/lib/auth/auth-store";
 import {
   BarChart3,
   Calendar,
@@ -17,7 +18,6 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/lib/auth/auth-store";
 
 interface AdminPanelProps {
   user: {
@@ -32,7 +32,7 @@ const tabs = [
   { id: "overview", label: "Resumen", icon: BarChart3 },
   { id: "users", label: "Usuarios", icon: Users },
   { id: "professionals", label: "Profesionales", icon: UserCheck },
-  { id: "bookings", label: "Citas", icon: Calendar },
+  { id: "bookings", label: "Consultas", icon: Calendar },
   { id: "payments", label: "Pagos", icon: DollarSign },
   { id: "settings", label: "Configuración", icon: Settings },
 ];
@@ -201,7 +201,9 @@ export default function AdminPanel({ user }: AdminPanelProps) {
                 <p className="text-2xl font-bold">
                   {dashboardData.totalBookings}
                 </p>
-                <p className="text-sm text-muted-foreground">Citas Totales</p>
+                <p className="text-sm text-muted-foreground">
+                  Consultas Totales
+                </p>
               </div>
             </div>
           </CardContent>
@@ -346,13 +348,13 @@ function OverviewTab({ data, loading }: { data: any; loading: boolean }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Citas Recientes</CardTitle>
+            <CardTitle>Consultas Recientes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {data.recentBookings.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
-                  No hay citas recientes
+                  No hay consultas recientes
                 </p>
               ) : (
                 data.recentBookings.map((booking: any) => (
@@ -484,7 +486,7 @@ function BookingsTab({ bookings }: { bookings: any[] }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Gestión de Citas</h3>
+        <h3 className="text-lg font-semibold">Gestión de Consultas</h3>
         <Button variant="outline">Exportar</Button>
       </div>
 

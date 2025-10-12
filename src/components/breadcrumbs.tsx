@@ -68,7 +68,6 @@ function generateBreadcrumbsFromPath(pathname: string): BreadcrumbItem[] {
       ingresar: "Ingresar",
       panel: "Panel",
       perfil: "Perfil",
-      mensajes: "Mensajes",
       pagos: "Pagos",
       solicitudes: "Solicitudes",
     };

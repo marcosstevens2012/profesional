@@ -153,7 +153,7 @@ function ConsultationRequestModal({
                 Procesando...
               </div>
             ) : (
-              "Pagar y Solicitar"
+              "Pagar y Soliconsultar"
             )}
           </Button>
         </div>
@@ -453,7 +453,7 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                   className="w-full mb-4 h-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                   onClick={() => setShowConsultationModal(true)}
                 >
-                  💳 Pagar y Solicitar Consulta
+                  💳 Pagar y Soliconsultar Consulta
                 </Button>
 
                 {/* Garantías rápidas */}

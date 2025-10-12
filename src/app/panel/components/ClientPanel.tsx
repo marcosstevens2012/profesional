@@ -7,15 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
-import {
-  Calendar,
-  CreditCard,
-  FileText,
-  MessageCircle,
-  User,
-} from "lucide-react";
-import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth/auth-store";
+import { Calendar, CreditCard, FileText, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ClientPanelProps {
   user: {
@@ -27,8 +21,7 @@ interface ClientPanelProps {
 }
 
 const tabs = [
-  { id: "bookings", label: "Mis Citas", icon: Calendar },
-  { id: "messages", label: "Mensajes", icon: MessageCircle },
+  { id: "bookings", label: "Historial de Consultas", icon: Calendar },
   { id: "payments", label: "Pagos", icon: CreditCard },
   { id: "profile", label: "Mi Perfil", icon: User },
 ];
@@ -83,8 +76,6 @@ export default function ClientPanel({ user }: ClientPanelProps) {
     switch (activeTab) {
       case "bookings":
         return <BookingsTab bookings={bookings} loading={loading} />;
-      case "messages":
-        return <MessagesTab />;
       case "payments":
         return <PaymentsTab />;
       case "profile":
@@ -101,10 +92,9 @@ export default function ClientPanel({ user }: ClientPanelProps) {
         <div>
           <h1 className="text-3xl font-bold">Mi Panel</h1>
           <p className="text-muted-foreground">
-            Bienvenido/a {user.name}, gestiona tus citas y consultas
+            Bienvenido/a {user.name}, gestiona tus consultas y consultas
           </p>
         </div>
-        <Button>Buscar Profesionales</Button>
       </div>
 
       {/* Stats Cards */}
@@ -117,7 +107,9 @@ export default function ClientPanel({ user }: ClientPanelProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{bookings.length}</p>
-                <p className="text-sm text-muted-foreground">Citas Totales</p>
+                <p className="text-sm text-muted-foreground">
+                  Consultas Totales
+                </p>
               </div>
             </div>
           </CardContent>
@@ -134,22 +126,6 @@ export default function ClientPanel({ user }: ClientPanelProps) {
                   {bookings.filter((b: any) => b.status === "COMPLETED").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Completadas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <MessageCircle className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">0</p>
-                <p className="text-sm text-muted-foreground">
-                  Mensajes Sin Leer
-                </p>
               </div>
             </div>
           </CardContent>
@@ -218,7 +194,7 @@ function BookingsTab({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando citas...</p>
+          <p className="text-muted-foreground">Cargando consultas...</p>
         </div>
       </div>
     );
@@ -229,7 +205,9 @@ function BookingsTab({
       <Card>
         <CardContent className="p-8 text-center">
           <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
-          <h3 className="text-xl font-semibold mb-2">No tienes citas aún</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            No tienes consultas aún
+          </h3>
           <p className="text-gray-600 mb-4">
             Explora profesionales y agenda tu primera consulta
           </p>
@@ -295,22 +273,6 @@ function BookingsTab({
         </Card>
       ))}
     </div>
-  );
-}
-
-function MessagesTab() {
-  return (
-    <Card>
-      <CardContent className="p-8 text-center">
-        <MessageCircle size={48} className="mx-auto mb-4 text-gray-400" />
-        <h3 className="text-xl font-semibold mb-2">
-          Sistema de mensajes próximamente
-        </h3>
-        <p className="text-gray-600">
-          Pronto podrás comunicarte directamente con tus profesionales
-        </p>
-      </CardContent>
-    </Card>
   );
 }
 

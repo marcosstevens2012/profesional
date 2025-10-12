@@ -258,7 +258,7 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                 </Button>
                 <Button size="lg" variant="outline" className="w-full">
                   <Calendar className="w-4 h-4 mr-2" />
-                  Agendar cita
+                  Agendar consulta
                 </Button>
               </div>
             </CardContent>
