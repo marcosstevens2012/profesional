@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { useAuth } from "@/hooks/useAuth";
 import { paymentsAPI } from "@/lib/api/payments";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
 import { formatLocation } from "@/lib/utils/location-utils";
@@ -27,34 +28,53 @@ function ConsultationRequestModal({
   isOpen,
   onClose,
   consultationPrice,
-  professionalSlug,
 }: {
   professional: any;
   isOpen: boolean;
   onClose: () => void;
   consultationPrice: number;
-  professionalSlug: string;
 }) {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   if (!isOpen) return null;
 
   const handlePayment = async () => {
     setLoading(true);
     try {
+      // TODO: This flow needs to be refactored
+      // Current issue: The API expects a bookingId, customerId, and professionalMPUserId
+      // which we don't have yet. The proper flow should be:
+      // 1. Create a draft booking first (POST /bookings)
+      // 2. Then create a payment for that booking (POST /bookings/:id/payment)
+      //
+      // For now, this will fail with validation errors until the backend
+      // provides an endpoint that doesn't require a booking, or we implement
+      // the proper booking creation flow first.
+
+      if (!user) {
+        alert("Debes iniciar sesión para realizar una consulta");
+        return;
+      }
+
       console.log("🚀 Iniciando pago para:", {
         professionalId: professional.id,
         professionalName: professional.user?.name || "Profesional",
-        professionalSlug: professionalSlug,
+        customerId: user.id,
         amount: consultationPrice,
       });
 
-      // Crear preferencia de pago en MercadoPago
+      // TEMPORARY SOLUTION: These values need to come from a real booking
+      // This will likely fail validation on the backend
       const paymentPreference = await paymentsAPI.createConsultationPayment({
+        bookingId: "temp-booking-id", // TODO: Create a real booking first
+        customerId: user.id,
         professionalId: professional.id,
-        professionalName: professional.user?.name || "Profesional",
-        professionalSlug: professionalSlug,
+        professionalMPUserId: professional.mercadoPagoUserId || 0, // TODO: Get real MP User ID
         amount: consultationPrice,
+        title: `Consulta con ${professional.user?.name || "Profesional"}`,
+        description: `Consulta profesional con ${professional.serviceCategory?.name || ""}`,
+        payerEmail: user.email,
       });
 
       console.log("✅ Payment preference recibida:", paymentPreference);
@@ -522,7 +542,6 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
         isOpen={showConsultationModal}
         onClose={() => setShowConsultationModal(false)}
         consultationPrice={consultationPrice}
-        professionalSlug={params.slug}
       />
     </div>
   );

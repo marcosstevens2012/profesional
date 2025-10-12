@@ -1,10 +1,14 @@
 import { apiClient } from "./client";
 
 export interface ConsultationPaymentRequest {
-  professionalId: number;
-  professionalName: string;
-  professionalSlug: string;
+  bookingId: string;
+  customerId: string;
+  professionalId: string;
+  professionalMPUserId: number;
   amount: number;
+  title: string;
+  description?: string;
+  payerEmail?: string;
 }
 
 export interface MercadoPagoPreference {
@@ -24,11 +28,14 @@ export const paymentsAPI = {
       const response = await apiClient.post<MercadoPagoPreferenceResponse>(
         "/payments/mp/preference",
         {
-          title: `Consulta con ${data.professionalName}`,
-          amount: data.amount,
+          bookingId: data.bookingId,
+          customerId: data.customerId,
           professionalId: data.professionalId,
-          professionalSlug: data.professionalSlug,
-          external_reference: `consultation_${data.professionalId}_${Date.now()}`,
+          professionalMPUserId: data.professionalMPUserId,
+          amount: data.amount,
+          title: data.title,
+          description: data.description,
+          payerEmail: data.payerEmail,
         }
       );
 
