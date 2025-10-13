@@ -44,6 +44,82 @@ export interface MercadoPagoPreferenceResponse {
   };
 }
 
+/**
+ * Request para confirmar un pago de MercadoPago
+ */
+export interface ConfirmPaymentRequest {
+  paymentId: string;
+  collectionId?: string;
+  status: string;
+  externalReference: string; // booking ID
+  paymentType?: string;
+  merchantOrderId?: string;
+  preferenceId?: string;
+}
+
+/**
+ * Response de confirmación de pago
+ */
+export interface ConfirmPaymentResponse {
+  success: boolean;
+  error?: string;
+  booking?: {
+    id: string;
+    title: string;
+    scheduledAt: string;
+    professional: {
+      name: string;
+      slug: string;
+    };
+    client: {
+      name: string;
+    };
+    payment: {
+      id: string;
+      amount: number;
+      status: string;
+      method: string;
+    };
+  };
+}
+
+/**
+ * Respuesta del endpoint /payments/status
+ */
+export interface PaymentStatusResponse {
+  success: boolean;
+  data: {
+    payment: {
+      id: string;
+      status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED";
+      amount: string; // Viene como string desde el backend
+      currency: string;
+      paymentId: string | null;
+      preferenceId: string;
+      paidAt: string | null;
+      createdAt: string;
+    };
+    booking: {
+      id: string;
+      scheduledAt: string;
+      duration: number;
+      status: string;
+      jitsiRoom: string;
+      meetingStatus: string;
+      professional: {
+        id: string;
+        name: string;
+        email: string;
+      };
+      client: {
+        id: string;
+        name: string;
+        email: string;
+      };
+    };
+  };
+}
+
 export const paymentsAPI = {
   /**
    * Crea una preferencia de pago simple (booking + pago integrado)
@@ -73,8 +149,56 @@ export const paymentsAPI = {
     }
   },
 
-  async getPaymentStatus(paymentId: string) {
-    const response = await apiClient.get(`/payments/payment/${paymentId}`);
+  /**
+   * Obtiene el estado de un pago usando payment_id y external_reference
+   * @param paymentId - ID del pago de MercadoPago (payment_id o collection_id)
+   * @param externalReference - ID del booking (external_reference)
+   * @returns Estado completo del pago y booking
+   */
+  async getPaymentStatus(
+    paymentId: string,
+    externalReference?: string
+  ): Promise<PaymentStatusResponse> {
+    const params = new URLSearchParams();
+    params.append("payment_id", paymentId);
+
+    if (externalReference) {
+      params.append("external_reference", externalReference);
+    }
+
+    const response = await apiClient.get<PaymentStatusResponse>(
+      `/payments/status?${params.toString()}`
+    );
     return response.data;
+  },
+
+  /**
+   * Confirma un pago de MercadoPago y actualiza el booking
+   * @deprecated - Usar getPaymentStatus en su lugar, el backend maneja la confirmación automáticamente
+   * @param data Datos del pago de MercadoPago
+   * @returns Detalles del booking confirmado
+   */
+  async confirmPayment(
+    data: ConfirmPaymentRequest
+  ): Promise<ConfirmPaymentResponse> {
+    try {
+      const response = await apiClient.post<ConfirmPaymentResponse>(
+        "/payments/mp/confirm",
+        {
+          paymentId: data.paymentId,
+          collectionId: data.collectionId,
+          status: data.status,
+          externalReference: data.externalReference,
+          paymentType: data.paymentType,
+          merchantOrderId: data.merchantOrderId,
+          preferenceId: data.preferenceId,
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error en confirmPayment:", error);
+      throw error;
+    }
   },
 };
