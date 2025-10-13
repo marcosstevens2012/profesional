@@ -68,18 +68,36 @@ export function getTokenTimeToExpiry(token: string): number {
 function setCookie(name: string, value: string, maxAge?: number): void {
   if (typeof window === "undefined") return;
 
-  const isProduction = window.location.protocol === "https:";
-  const cookieOptions = [
-    `${name}=${value}`,
-    `path=/`,
-    `SameSite=Lax`,
-    maxAge ? `max-age=${maxAge}` : "",
-    isProduction ? "Secure" : "", // Solo Secure en HTTPS
-  ]
-    .filter(Boolean)
-    .join("; ");
+  const isHttps = window.location.protocol === "https:";
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
 
-  document.cookie = cookieOptions;
+  // Construir opciones de cookie
+  let cookieString = `${name}=${encodeURIComponent(value)}`;
+  cookieString += `; path=/`;
+
+  // En producción (Vercel), usar SameSite=None con Secure para permitir cookies cross-site
+  // En desarrollo local, usar SameSite=Lax
+  if (isHttps && !isLocalhost) {
+    // Producción: SameSite=None requiere Secure
+    cookieString += `; SameSite=None; Secure`;
+  } else {
+    // Desarrollo local: SameSite=Lax
+    cookieString += `; SameSite=Lax`;
+  }
+
+  if (maxAge) {
+    cookieString += `; max-age=${maxAge}`;
+  }
+
+  document.cookie = cookieString;
+
+  // Verificar que la cookie se estableció correctamente (siempre en consola para debug)
+  const wasSet = document.cookie.includes(`${name}=`);
+  console.log(
+    `[Cookie] ${name} ${wasSet ? "✅ set" : "❌ failed to set"} | Protocol: ${window.location.protocol} | Host: ${window.location.hostname}`
+  );
 }
 
 /**
@@ -87,7 +105,26 @@ function setCookie(name: string, value: string, maxAge?: number): void {
  */
 function deleteCookie(name: string): void {
   if (typeof window === "undefined") return;
-  document.cookie = `${name}=; path=/; max-age=0`;
+
+  const isHttps = window.location.protocol === "https:";
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+
+  // Eliminar con las mismas opciones con las que se creó
+  if (isHttps && !isLocalhost) {
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=None; Secure`;
+  } else {
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+  }
+
+  // Fallback: intentar eliminar con expires también
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+
+  const wasDeleted = !document.cookie.includes(`${name}=`);
+  console.log(
+    `[Cookie] ${name} ${wasDeleted ? "✅ deleted" : "❌ still present"}`
+  );
 }
 
 /**

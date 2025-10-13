@@ -34,7 +34,9 @@ export default function LoginPage() {
       const response = await login({ email, password });
       console.log("Login exitoso:", response);
 
-      // Forzar redirección inmediata después del login exitoso
+      // Dar tiempo para que las cookies se establezcan antes de redirigir
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const callbackUrl = searchParams.get("callbackUrl") || "/panel";
       window.location.href = callbackUrl; // Usar window.location para forzar recarga
     } catch (err: any) {
