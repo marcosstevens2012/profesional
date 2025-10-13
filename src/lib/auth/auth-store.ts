@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { AuthTokens, AuthUser } from "../contracts";
+import {
+  accessToken,
+  clearAllTokens,
+  refreshToken,
+  setTokens,
+} from "../utils/token-utils";
 
 interface AuthState {
   user: AuthUser | null;
@@ -13,32 +19,20 @@ interface AuthState {
   logout: () => void;
 }
 
-// Custom storage implementation that syncs with cookies
-const cookieStorage = {
+// Storage implementation que solo guarda el user en localStorage
+// Los tokens se manejan de forma separada y más segura
+const userStorage = {
   getItem: (name: string): string | null => {
     if (typeof window === "undefined") return null;
-
-    // Get from localStorage first
-    const value = localStorage.getItem(name);
-    if (value) {
-      // Also sync to cookie for middleware access
-      document.cookie = `${name}=${value}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
-    }
-    return value;
+    return localStorage.getItem(name);
   },
   setItem: (name: string, value: string): void => {
     if (typeof window === "undefined") return;
-
-    // Set in both localStorage and cookie
     localStorage.setItem(name, value);
-    document.cookie = `${name}=${value}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 days
   },
   removeItem: (name: string): void => {
     if (typeof window === "undefined") return;
-
-    // Remove from both localStorage and cookie
     localStorage.removeItem(name);
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   },
 };
 
@@ -56,31 +50,59 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: !!_user,
         }),
 
-      setTokens: (_tokens) =>
+      setTokens: (_tokens) => {
+        // Guardar tokens de forma segura
+        if (_tokens) {
+          setTokens({
+            accessToken: _tokens.accessToken,
+            refreshToken: _tokens.refreshToken,
+          });
+        } else {
+          clearAllTokens();
+        }
+
         set({
           tokens: _tokens,
-        }),
+        });
+      },
 
       setLoading: (_loading) =>
         set({
           isLoading: _loading,
         }),
 
-      logout: () =>
+      logout: () => {
+        clearAllTokens();
         set({
           user: null,
           tokens: null,
           isAuthenticated: false,
-        }),
+        });
+      },
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() => cookieStorage),
+      storage: createJSONStorage(() => userStorage),
+      // Solo persistir el usuario, no los tokens
       partialize: (state) => ({
         user: state.user,
-        tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
       }),
+      // Al hidratar, recuperar los tokens del storage seguro
+      onRehydrateStorage: () => (state) => {
+        if (state && typeof window !== "undefined") {
+          const storedAccessToken = accessToken.get();
+          const storedRefreshToken = refreshToken.get();
+
+          if (storedAccessToken && storedRefreshToken) {
+            state.tokens = {
+              accessToken: storedAccessToken,
+              refreshToken: storedRefreshToken,
+              expiresIn: 900, // 15 minutos
+            };
+          }
+        }
+      },
     }
   )
 );

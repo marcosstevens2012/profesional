@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import {
   AlertTriangle,
   Calendar,
@@ -74,11 +75,8 @@ export default function PagosAdmin() {
 
   const fetchPayments = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/payments", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -95,15 +93,11 @@ export default function PagosAdmin() {
   const retryPaymentReconciliation = async (paymentId: string) => {
     setRetryingPayment(paymentId);
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(
         `/api/admin/payments/${paymentId}/retry-reconciliation`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
         }
       );
 

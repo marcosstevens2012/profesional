@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { useAuth } from "@/hooks/useAuth";
 import { paymentsAPI } from "@/lib/api/payments";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
 import { formatLocation } from "@/lib/utils/location-utils";
@@ -28,30 +29,47 @@ function ConsultationRequestModal({
   onClose,
   consultationPrice,
   professionalSlug,
+  currentUserId,
 }: {
   professional: any;
   isOpen: boolean;
   onClose: () => void;
   consultationPrice: number;
   professionalSlug: string;
+  currentUserId?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handlePayment = async () => {
+    // Validar que tengamos userId
+    if (!currentUserId) {
+      alert("Debes iniciar sesión para solicitar una consulta");
+      return;
+    }
+
     setLoading(true);
     try {
       console.log("🚀 Iniciando pago para:", {
         professionalSlug,
-        amount: consultationPrice,
+        professionalId: professional.id,
+        clientId: currentUserId,
+        price: consultationPrice,
         title: `Consulta con ${professional.user?.name || "Profesional"}`,
       });
 
+      // Crear una fecha de consulta por defecto (en 24 horas)
+      const scheduledAt = new Date();
+      scheduledAt.setHours(scheduledAt.getHours() + 24);
+
       // Crear preferencia de pago en MercadoPago
       const paymentResponse = await paymentsAPI.createConsultationPayment({
+        clientId: currentUserId,
+        professionalId: professional.id,
+        scheduledAt: scheduledAt.toISOString(),
+        price: consultationPrice,
         title: `Consulta con ${professional.user?.name || "Profesional"}`,
-        amount: consultationPrice,
         professionalSlug,
       });
 
@@ -165,6 +183,7 @@ function ConsultationRequestModal({
 export default function ProfessionalPage({ params }: ProfessionalPageProps) {
   const [showConsultationModal, setShowConsultationModal] = useState(false);
   const router = useRouter();
+  const { user } = useAuth(); // Obtener usuario actual
   const {
     data: professional,
     isLoading,
@@ -527,6 +546,7 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
         onClose={() => setShowConsultationModal(false)}
         consultationPrice={consultationPrice}
         professionalSlug={params.slug}
+        currentUserId={user?.id}
       />
     </div>
   );

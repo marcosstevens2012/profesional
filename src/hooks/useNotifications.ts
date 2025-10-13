@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import { useQuery } from "@tanstack/react-query";
 
 interface Notification {
@@ -30,9 +31,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: getAuthHeaders(),
         }
       );
 
@@ -57,9 +56,7 @@ export function useUnreadNotificationsCount() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/notifications/unread/count`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: getAuthHeaders(),
         }
       );
 
@@ -83,9 +80,7 @@ export function useMarkNotificationAsRead() {
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/read`,
       {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: getAuthHeaders(),
       }
     );
 
@@ -108,9 +103,7 @@ export function useMarkAllNotificationsAsRead() {
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/read-all`,
       {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: getAuthHeaders(),
       }
     );
 
@@ -133,9 +126,7 @@ export function useDeleteNotification() {
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}`,
       {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: getAuthHeaders(),
       }
     );
 

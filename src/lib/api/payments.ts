@@ -1,9 +1,16 @@
 import { apiClient } from "./client";
 
+/**
+ * Request para crear una preferencia de pago simple
+ * Crea una booking con pago integrado
+ */
 export interface ConsultationPaymentRequest {
-  title: string;
-  amount: number;
-  professionalSlug: string;
+  clientId: string; // ID del usuario cliente
+  professionalId: string; // ID del perfil profesional
+  scheduledAt: string; // Fecha/hora en formato ISO 8601
+  price: number; // Precio de la consulta
+  title: string; // Título de la consulta
+  professionalSlug: string; // Slug del profesional
 }
 
 export interface MercadoPagoPreference {
@@ -30,18 +37,31 @@ export interface MercadoPagoPreferenceResponse {
     professional_slug: string;
     is_sandbox: boolean;
   };
+  booking?: {
+    id: string;
+    title: string;
+    scheduledAt: string;
+  };
 }
 
 export const paymentsAPI = {
+  /**
+   * Crea una preferencia de pago simple (booking + pago integrado)
+   * @param data Datos de la consulta y pago
+   * @returns Preferencia de MercadoPago con init_point para redirigir
+   */
   async createConsultationPayment(
     data: ConsultationPaymentRequest
   ): Promise<MercadoPagoPreferenceResponse> {
     try {
       const response = await apiClient.post<MercadoPagoPreferenceResponse>(
-        "/payments/mp/preference",
+        "/payments/mp/simple-preference",
         {
+          clientId: data.clientId,
+          professionalId: data.professionalId,
+          scheduledAt: data.scheduledAt,
+          price: data.price,
           title: data.title,
-          amount: data.amount,
           professionalSlug: data.professionalSlug,
         }
       );

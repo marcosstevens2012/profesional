@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import {
   AlertTriangle,
   Calendar,
@@ -34,11 +35,8 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/dashboard", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {

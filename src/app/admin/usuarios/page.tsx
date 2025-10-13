@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import {
   Calendar,
   Edit,
@@ -48,11 +49,8 @@ export default function UsuariosAdmin() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -68,13 +66,9 @@ export default function UsuariosAdmin() {
 
   const updateUserStatus = async (userId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`/api/admin/users/${userId}/status`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus }),
       });
 

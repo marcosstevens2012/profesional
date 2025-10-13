@@ -1,4 +1,5 @@
 import { JitsiMeeting } from "@/components/JitsiMeeting";
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -42,9 +43,7 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
         const response = await fetch(
           `/api/bookings/${bookingId}/meeting-status`,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+            headers: getAuthHeaders(),
           }
         );
 

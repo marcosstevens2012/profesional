@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import { useState } from "react";
 
 interface CreatePaymentResponse {
@@ -37,10 +38,7 @@ export function useCreateBookingPayment(): UseCreateBookingPaymentReturn {
         `${process.env.NEXT_PUBLIC_API_URL}/bookings/${bookingId}/payment`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: getAuthHeaders(),
         }
       );
 

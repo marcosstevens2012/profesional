@@ -1,6 +1,7 @@
 "use client";
 
 import WaitingRoom from "@/components/WaitingRoom";
+import { getAuthHeaders, hasAuthToken } from "@/lib/utils/auth-helpers";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,18 +15,14 @@ export default function MeetingPage() {
   useEffect(() => {
     const fetchBookingData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
+        if (!hasAuthToken()) {
           setError("No se encontró token de autenticación");
           setLoading(false);
           return;
         }
 
         const response = await fetch(`/api/bookings/${bookingId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {

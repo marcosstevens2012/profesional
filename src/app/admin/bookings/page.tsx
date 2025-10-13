@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { getAuthHeaders } from "@/lib/utils/auth-helpers";
 import {
   AlertTriangle,
   CheckCircle,
@@ -78,11 +79,8 @@ export default function BookingsAdmin() {
 
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/admin/bookings", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {
@@ -98,13 +96,9 @@ export default function BookingsAdmin() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`/api/admin/bookings/${bookingId}/status`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus }),
       });
 
