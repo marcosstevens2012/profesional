@@ -63,6 +63,34 @@ export function getTokenTimeToExpiry(token: string): number {
 }
 
 /**
+ * Helper para establecer una cookie en el cliente
+ */
+function setCookie(name: string, value: string, maxAge?: number): void {
+  if (typeof window === "undefined") return;
+
+  const isProduction = window.location.protocol === "https:";
+  const cookieOptions = [
+    `${name}=${value}`,
+    `path=/`,
+    `SameSite=Lax`,
+    maxAge ? `max-age=${maxAge}` : "",
+    isProduction ? "Secure" : "", // Solo Secure en HTTPS
+  ]
+    .filter(Boolean)
+    .join("; ");
+
+  document.cookie = cookieOptions;
+}
+
+/**
+ * Helper para eliminar una cookie
+ */
+function deleteCookie(name: string): void {
+  if (typeof window === "undefined") return;
+  document.cookie = `${name}=; path=/; max-age=0`;
+}
+
+/**
  * Gestión del Access Token (sessionStorage para seguridad)
  */
 export const accessToken = {
@@ -80,12 +108,17 @@ export const accessToken = {
     if (decoded?.exp) {
       sessionStorage.setItem(TOKEN_EXPIRY_KEY, decoded.exp.toString());
     }
+
+    // Crear una cookie para que el middleware pueda verificar autenticación
+    // Solo guardamos un flag, no el token completo por seguridad
+    setCookie("auth-token", "1", 60 * 15); // 15 minutos
   },
 
   remove(): void {
     if (typeof window === "undefined") return;
     sessionStorage.removeItem(ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+    deleteCookie("auth-token");
   },
 
   isValid(): boolean {

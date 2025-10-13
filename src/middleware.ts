@@ -7,21 +7,9 @@ const protectedRoutes = ["/dashboard", "/perfil", "/configuracion", "/panel"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if user has auth tokens (simple check)
-  // Note: In middleware, we can't access localStorage directly,
-  // but we can check for a auth-storage cookie that would be set by the client
-  const authStorage = request.cookies.get("auth-storage");
-  let isAuthenticated = false;
-
-  if (authStorage?.value) {
-    try {
-      const parsed = JSON.parse(authStorage.value);
-      isAuthenticated = !!parsed.state?.tokens?.accessToken;
-    } catch (error) {
-      // If parsing fails, consider user as unauthenticated
-      isAuthenticated = false;
-    }
-  }
+  // Check if user has auth token cookie
+  const authToken = request.cookies.get("auth-token");
+  const isAuthenticated = !!authToken?.value;
 
   // For protected routes, if not authenticated, redirect to login
   if (
@@ -33,9 +21,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // For auth routes, if authenticated, redirect to panel
-  // But skip this check for now to avoid redirect loops
-  // TODO: Fix this properly with client-side navigation
+  // For auth routes (/ingresar, /registro), if authenticated, redirect to panel
+  const authRoutes = ["/ingresar", "/registro"];
+  if (
+    authRoutes.some((route) => pathname.startsWith(route)) &&
+    isAuthenticated
+  ) {
+    const url = new URL("/panel", request.url);
+    return NextResponse.redirect(url);
+  }
 
   return NextResponse.next();
 }
