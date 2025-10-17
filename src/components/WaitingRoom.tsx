@@ -1,29 +1,29 @@
+"use client";
+
 import { JitsiMeeting } from "@/components/JitsiMeeting";
-import { getAuthHeaders } from "@/lib/utils/auth-helpers";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  useActiveMeetingMonitor,
+  useMeetingManager,
+} from "@/hooks/useMeetings";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  Users,
+  Video,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 interface WaitingRoomProps {
   bookingId: string;
-  clientName: string;
-  professionalName: string;
-}
-
-type MeetingStatus =
-  | "PENDING"
-  | "WAITING"
-  | "ACTIVE"
-  | "COMPLETED"
-  | "CANCELLED"
-  | "EXPIRED";
-
-interface MeetingStatusResponse {
-  bookingId: string;
-  jitsiRoom: string;
-  meetingStatus: MeetingStatus;
-  meetingStartTime?: string;
-  meetingEndTime?: string;
-  remainingTime?: number;
+  clientName?: string;
+  professionalName?: string;
 }
 
 export const WaitingRoom: React.FC<WaitingRoomProps> = ({
@@ -31,174 +31,198 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
   clientName,
   professionalName,
 }) => {
-  const [meetingStatus, setMeetingStatus] =
-    useState<MeetingStatusResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const {
+    canJoin,
+    jitsiRoom,
+    role,
+    meetingStatus,
+    bookingStatus,
+    booking,
+    isLoading,
+    isStarting,
+    startMeeting,
+    handleJoinMeeting,
+    refetch,
+    canStart,
+    isActive,
+    isCompleted,
+    isWaiting,
+  } = useMeetingManager(bookingId);
+
+  const { formattedTime, isEnding } = useActiveMeetingMonitor(bookingId, () => {
+    // Callback cuando termina la reunión
+    router.push(`/bookings/${bookingId}/success`);
+  });
+
+  // Auto-start meeting si está listo
   useEffect(() => {
-    const fetchMeetingStatus = async () => {
-      try {
-        const response = await fetch(
-          `/api/bookings/${bookingId}/meeting-status`,
-          {
-            headers: getAuthHeaders(),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al obtener el estado de la reunión");
-        }
-
-        const data = await response.json();
-        setMeetingStatus(data);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
-        setIsLoading(false);
-      }
-    };
-
-    fetchMeetingStatus();
-
-    // Polling cada 5 segundos para verificar si el profesional acepta la reunión
-    const interval = setInterval(fetchMeetingStatus, 5000);
-
-    return () => clearInterval(interval);
-  }, [bookingId]);
+    if (canStart && meetingStatus === "WAITING") {
+      // Auto-iniciar después de un breve delay
+      const timer = setTimeout(() => {
+        startMeeting();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [canStart, meetingStatus, startMeeting]);
 
   const handleVideoConferenceLeft = () => {
-    // Redirigir a una página de feedback o resumen
-    router.push(`/bookings/${bookingId}/completed`);
+    router.push(`/bookings/${bookingId}/success`);
   };
 
+  // Estados de carga
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando estado de la reunión...</p>
-        </div>
+        <Card className="p-8 max-w-md w-full text-center">
+          <RefreshCw className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Cargando reunión...
+          </h2>
+          <p className="text-gray-600">Verificando el estado de tu consulta</p>
+        </Card>
       </div>
     );
   }
 
-  if (error) {
+  // Error o no puede unirse
+  if (!canJoin && !isLoading) {
+    const getErrorMessage = () => {
+      switch (bookingStatus) {
+        case "PENDING_PAYMENT":
+          return "El pago aún no ha sido procesado";
+        case "WAITING_FOR_PROFESSIONAL":
+          return "Esperando que el profesional acepte la consulta";
+        case "CANCELLED":
+          return "La consulta ha sido cancelada";
+        case "COMPLETED":
+          return "La consulta ya ha finalizado";
+        default:
+          return "No es posible unirse a la reunión en este momento";
+      }
+    };
+
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.push("/panel")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg"
-          >
-            Volver al Panel
-          </button>
-        </div>
+        <Card className="p-8 max-w-md w-full text-center">
+          <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Reunión no disponible
+          </h2>
+          <p className="text-gray-600 mb-6">{getErrorMessage()}</p>
+          <div className="space-y-3">
+            <Button onClick={refetch} variant="outline" className="w-full">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Verificar Estado
+            </Button>
+            <Button
+              onClick={() => router.push(`/bookings/${bookingId}`)}
+              className="w-full"
+            >
+              Ver Detalles
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
 
-  if (!meetingStatus) {
+  // Reunión activa - mostrar Jitsi
+  if (isActive && jitsiRoom) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">
-            No se pudo obtener el estado de la reunión
-          </p>
+      <div className="h-screen relative">
+        {/* Header con tiempo restante */}
+        <div className="absolute top-4 right-4 z-50">
+          <Card className="p-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4" />
+              <span
+                className={
+                  isEnding ? "text-red-600 font-bold" : "text-gray-700"
+                }
+              >
+                {formattedTime}
+              </span>
+              {isEnding && (
+                <Badge variant="destructive" className="text-xs">
+                  Finalizando
+                </Badge>
+              )}
+            </div>
+          </Card>
         </div>
-      </div>
-    );
-  }
 
-  // Si la reunión está activa, mostrar Jitsi
-  if (meetingStatus.meetingStatus === "ACTIVE") {
-    return (
-      <div className="h-screen">
         <JitsiMeeting
-          roomName={meetingStatus.jitsiRoom}
-          userDisplayName={clientName}
+          roomName={jitsiRoom}
+          userDisplayName={clientName || professionalName || "Usuario"}
+          userEmail={
+            booking?.client?.email || booking?.professional?.user?.email
+          }
           onVideoConferenceLeft={handleVideoConferenceLeft}
-          maxDuration={meetingStatus.remainingTime || 18 * 60 * 1000}
+          maxDuration={18 * 60 * 1000} // 18 minutos
         />
       </div>
     );
   }
 
-  // Si la reunión terminó
-  if (meetingStatus.meetingStatus === "COMPLETED") {
+  // Reunión completada
+  if (isCompleted) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="text-green-500 text-6xl mb-4">✅</div>
+        <Card className="p-8 max-w-md w-full text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Reunión Completada
+            Consulta Completada
           </h2>
           <p className="text-gray-600 mb-6">
-            Su sesión con {professionalName} ha finalizado.
+            Su sesión ha finalizado exitosamente.
           </p>
-          <button
-            onClick={() => router.push(`/bookings/${bookingId}/completed`)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg"
+          <Button
+            onClick={() => router.push(`/bookings/${bookingId}/success`)}
+            className="w-full"
           >
             Continuar
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     );
   }
 
-  // Si la reunión fue cancelada o expiró
-  if (
-    meetingStatus.meetingStatus === "CANCELLED" ||
-    meetingStatus.meetingStatus === "EXPIRED"
-  ) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="text-orange-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {meetingStatus.meetingStatus === "CANCELLED"
-              ? "Reunión Cancelada"
-              : "Reunión Expirada"}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {meetingStatus.meetingStatus === "CANCELLED"
-              ? "El profesional ha cancelado la reunión."
-              : "El tiempo de espera ha expirado."}
-          </p>
-          <button
-            onClick={() => router.push("/panel")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg"
-          >
-            Volver al Panel
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Sala de espera por defecto
+  // Sala de espera
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full text-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="p-8 max-w-lg w-full text-center">
+        {/* Header */}
         <div className="mb-6">
-          <div className="animate-pulse rounded-full h-20 w-20 bg-blue-200 mx-auto mb-4 flex items-center justify-center">
-            <span className="text-2xl">👨‍💼</span>
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Video className="w-10 h-10 text-blue-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Sala de Espera
           </h2>
           <p className="text-gray-600">
-            Esperando a que <strong>{professionalName}</strong> se una a la
-            reunión
+            {isWaiting
+              ? `Esperando a que ${role === "client" ? "el profesional" : "el cliente"} se una`
+              : "Preparando reunión..."}
           </p>
         </div>
 
-        <div className="mb-8">
+        {/* Estado actual */}
+        <div className="mb-6">
+          <Badge variant="outline" className="mb-4">
+            {meetingStatus === "WAITING"
+              ? "Esperando confirmación"
+              : meetingStatus}
+          </Badge>
+
+          {isStarting && (
+            <div className="flex items-center justify-center gap-2 text-blue-600 mb-4">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Iniciando reunión...</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-center space-x-2 text-blue-600 mb-4">
             <div className="animate-bounce">●</div>
             <div className="animate-bounce" style={{ animationDelay: "0.1s" }}>
@@ -208,41 +232,88 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
               ●
             </div>
           </div>
-          <p className="text-sm text-gray-500">
-            Su pago ha sido procesado correctamente. El profesional ha sido
-            notificado y se unirá en breve.
-          </p>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-900 mb-2">
-            Información de la Sesión
-          </h3>
-          <div className="text-left space-y-1 text-sm">
-            <p>
-              <strong>Cliente:</strong> {clientName}
-            </p>
-            <p>
-              <strong>Profesional:</strong> {professionalName}
-            </p>
-            <p>
-              <strong>Duración:</strong> 18 minutos
-            </p>
-            <p>
-              <strong>Estado:</strong>{" "}
-              {meetingStatus.meetingStatus === "WAITING"
-                ? "Esperando confirmación"
-                : "Preparando reunión"}
-            </p>
-          </div>
+        {/* Información de la sesión */}
+        {booking && (
+          <Card className="p-4 mb-6 bg-blue-50 border-blue-200">
+            <h3 className="font-semibold text-blue-900 mb-3">
+              Información de la Consulta
+            </h3>
+            <div className="grid grid-cols-1 gap-2 text-sm text-left">
+              {role === "client" && booking.professional && (
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 mr-2 text-blue-600" />
+                  <span>
+                    <strong>Profesional:</strong>{" "}
+                    {booking.professional.user?.name}
+                  </span>
+                </div>
+              )}
+              {role === "professional" && booking.client && (
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 mr-2 text-blue-600" />
+                  <span>
+                    <strong>Cliente:</strong> {booking.client.name}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+                <span>
+                  <strong>Fecha:</strong>{" "}
+                  {new Date(booking.scheduledAt).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-blue-600" />
+                <span>
+                  <strong>Duración:</strong> {booking.duration || 60} minutos
+                </span>
+              </div>
+              {jitsiRoom && (
+                <div className="flex items-center">
+                  <Video className="w-4 h-4 mr-2 text-blue-600" />
+                  <span>
+                    <strong>Sala:</strong> {jitsiRoom}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
+        {/* Acciones */}
+        <div className="space-y-3">
+          {canStart && !isStarting && (
+            <Button onClick={handleJoinMeeting} className="w-full" size="lg">
+              <Video className="w-5 h-5 mr-2" />
+              Iniciar Reunión
+            </Button>
+          )}
+
+          <Button onClick={refetch} variant="outline" className="w-full">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Actualizar Estado
+          </Button>
+
+          <Button
+            onClick={() => router.push(`/bookings/${bookingId}`)}
+            variant="ghost"
+            className="w-full"
+          >
+            Ver Detalles de la Consulta
+          </Button>
         </div>
 
-        <div className="text-xs text-gray-400">
+        {/* Footer info */}
+        <div className="mt-6 text-xs text-gray-500">
           <p>
-            La reunión comenzará automáticamente cuando el profesional se una.
+            La reunión comenzará automáticamente cuando ambas partes estén
+            listas.
           </p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -267,14 +267,23 @@ export const UpdateAvailabilitySlotSchema =
 // ===== BOOKING SCHEMAS =====
 
 export const BookingStatusEnum = z.enum([
-  "draft",
-  "pending_payment",
-  "paid",
-  "confirmed",
-  "in_progress",
-  "completed",
-  "canceled",
-  "no_show",
+  "PENDING_PAYMENT",
+  "WAITING_FOR_PROFESSIONAL",
+  "PENDING",
+  "CONFIRMED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+]);
+
+export const MeetingStatusEnum = z.enum([
+  "PENDING",
+  "WAITING",
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELLED",
+  "EXPIRED",
 ]);
 
 export const BookingSchema = z
@@ -282,41 +291,111 @@ export const BookingSchema = z
     id: IdSchema,
     clientId: IdSchema,
     professionalId: IdSchema,
-    serviceDescription: z.string().max(1000),
     scheduledAt: z.coerce.date(),
-    duration: z.number().min(30).max(480), // minutes: 30min - 8h
-    hourlyRate: z.number().min(0),
-    totalAmount: z.number().min(0),
-    currency: z.enum(["ARS", "USD"]).default("ARS"),
-    status: BookingStatusEnum.default("draft"),
+    duration: z.number().min(30).max(480).default(60), // minutes: 30min - 8h
+    price: z.number().min(0),
     notes: z.string().max(2000).optional(),
-    cancelReason: z.string().max(500).optional(),
-    canceledAt: z.coerce.date().optional(),
-    canceledBy: IdSchema.optional(),
+    status: BookingStatusEnum.default("PENDING_PAYMENT"),
+    paymentId: IdSchema.optional(),
+
+    // Campos Jitsi
+    jitsiRoom: z.string().optional(),
+    meetingStatus: MeetingStatusEnum.default("PENDING"),
+    meetingStartTime: z.coerce.date().optional(),
+    meetingEndTime: z.coerce.date().optional(),
+    meetingAcceptedAt: z.coerce.date().optional(),
   })
   .merge(TimestampsSchema);
 
 export const CreateBookingSchema = z.object({
   professionalId: IdSchema,
-  serviceDescription: z.string().max(1000),
   scheduledAt: z.coerce.date(),
-  duration: z.number().min(30).max(480),
+  duration: z.number().min(30).max(480).default(60),
+  price: z.number().min(0),
   notes: z.string().max(2000).optional(),
 });
 
 export const UpdateBookingSchema = z.object({
   scheduledAt: z.coerce.date().optional(),
   duration: z.number().min(30).max(480).optional(),
-  serviceDescription: z.string().max(1000).optional(),
   status: BookingStatusEnum.optional(),
+  meetingStatus: MeetingStatusEnum.optional(),
   notes: z.string().max(2000).optional(),
-  cancelReason: z.string().max(500).optional(),
+  jitsiRoom: z.string().optional(),
+  meetingStartTime: z.coerce.date().optional(),
+  meetingEndTime: z.coerce.date().optional(),
+  meetingAcceptedAt: z.coerce.date().optional(),
 });
 
 export const BookingViewSchema = BookingSchema.extend({
   client: UserViewSchema,
   professional: ProfessionalProfileViewSchema,
   payment: z.any().optional(),
+});
+
+// ===== BOOKING API RESPONSE SCHEMAS =====
+
+// Waiting Bookings Response (Professional)
+export const WaitingBookingsResponseSchema = z.object({
+  bookings: z.array(BookingViewSchema),
+  count: z.number(),
+  message: z.string(),
+});
+
+// Accept Meeting Response
+export const AcceptMeetingResponseSchema = BookingSchema.extend({
+  canJoinMeeting: z.boolean(),
+  message: z.string(),
+  client: UserViewSchema,
+  professional: z.object({
+    id: IdSchema,
+    name: z.string(),
+    email: z.string().email(),
+  }),
+});
+
+// Client Bookings Response (with grouping)
+export const ClientBookingsResponseSchema = z.object({
+  bookings: z.array(BookingViewSchema),
+  count: z.number(),
+  grouped: z.object({
+    pending_payment: z.array(BookingViewSchema),
+    waiting_acceptance: z.array(BookingViewSchema),
+    confirmed: z.array(BookingViewSchema),
+    in_progress: z.array(BookingViewSchema),
+    completed: z.array(BookingViewSchema),
+    cancelled: z.array(BookingViewSchema),
+  }),
+});
+
+// Join Meeting Response
+export const JoinMeetingResponseSchema = z.object({
+  canJoin: z.boolean(),
+  jitsiRoom: z.string(),
+  role: z.enum(["client", "professional"]),
+  meetingStatus: MeetingStatusEnum,
+  bookingStatus: BookingStatusEnum,
+});
+
+// Start Meeting Response
+export const StartMeetingResponseSchema = BookingSchema.extend({
+  remainingTime: z.number(), // milliseconds
+  client: UserViewSchema,
+  professional: z.object({
+    id: IdSchema,
+    name: z.string(),
+    email: z.string().email(),
+  }),
+});
+
+// Meeting Status Response
+export const MeetingStatusResponseSchema = z.object({
+  canJoin: z.boolean(),
+  jitsiRoom: z.string(),
+  role: z.enum(["client", "professional"]),
+  meetingStatus: MeetingStatusEnum,
+  bookingStatus: BookingStatusEnum,
+  remainingTime: z.number().optional(), // milliseconds si está activa
 });
 
 // ===== PAYMENT SCHEMAS =====
@@ -775,6 +854,19 @@ export type CreateBookingDTO = z.infer<typeof CreateBookingSchema>;
 export type UpdateBookingDTO = z.infer<typeof UpdateBookingSchema>;
 export type BookingView = z.infer<typeof BookingViewSchema>;
 export type BookingStatus = z.infer<typeof BookingStatusEnum>;
+export type MeetingStatus = z.infer<typeof MeetingStatusEnum>;
+
+// Booking API Response Types
+export type WaitingBookingsResponse = z.infer<
+  typeof WaitingBookingsResponseSchema
+>;
+export type AcceptMeetingResponse = z.infer<typeof AcceptMeetingResponseSchema>;
+export type ClientBookingsResponse = z.infer<
+  typeof ClientBookingsResponseSchema
+>;
+export type JoinMeetingResponse = z.infer<typeof JoinMeetingResponseSchema>;
+export type StartMeetingResponse = z.infer<typeof StartMeetingResponseSchema>;
+export type MeetingStatusResponse = z.infer<typeof MeetingStatusResponseSchema>;
 
 export type Payment = z.infer<typeof PaymentSchema>;
 export type CreatePaymentDTO = z.infer<typeof CreatePaymentSchema>;
