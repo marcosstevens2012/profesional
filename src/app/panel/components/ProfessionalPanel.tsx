@@ -6,10 +6,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Label,
+  Switch,
 } from "@/components/ui";
 import { useAuthStore } from "@/lib/auth/auth-store";
 import { Calendar, DollarSign, Star, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface ProfessionalPanelProps {
   user: {
@@ -34,6 +37,8 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
   const [appointments, setAppointments] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isActive, setIsActive] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
   const [stats, setStats] = useState({
     totalAppointments: 0,
     monthlyEarnings: 0,
@@ -66,6 +71,21 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
           setProfile(profileData);
+        }
+
+        // Fetch active status
+        const activeStatusResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/profiles/me/active-status`,
+          {
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+            },
+          }
+        );
+
+        if (activeStatusResponse.ok) {
+          const statusData = await activeStatusResponse.json();
+          setIsActive(statusData.isActive);
         }
 
         // Fetch appointments
@@ -119,6 +139,44 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
     fetchProfessionalData();
   }, [user.id, tokens?.accessToken]);
 
+  const handleToggleActive = async () => {
+    if (!tokens?.accessToken) {
+      toast.error("No estás autenticado");
+      return;
+    }
+
+    setToggleLoading(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/profiles/me/toggle-active`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsActive(data.isActive);
+        toast.success(
+          data.isActive
+            ? "Perfil activado - Ahora estás visible para los clientes"
+            : "Perfil desactivado - No recibirás nuevas reservas"
+        );
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Error al cambiar el estado");
+      }
+    } catch (error) {
+      console.error("Error toggling active status:", error);
+      toast.error("Error al cambiar el estado del perfil");
+    } finally {
+      setToggleLoading(false);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "appointments":
@@ -150,7 +208,45 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
             Bienvenido/a {user.name}, gestiona tu práctica profesional
           </p>
         </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Label
+              htmlFor="active-toggle"
+              className="text-sm font-medium cursor-pointer"
+            >
+              {isActive ? (
+                <span className="text-green-600">🟢 Perfil Activo</span>
+              ) : (
+                <span className="text-gray-500">⚫ Perfil Inactivo</span>
+              )}
+            </Label>
+            <Switch
+              id="active-toggle"
+              checked={isActive}
+              onCheckedChange={handleToggleActive}
+              disabled={toggleLoading}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Status Info Alert */}
+      {!isActive && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="text-amber-600 dark:text-amber-400 text-xl">⚠️</div>
+            <div>
+              <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                Tu perfil está inactivo
+              </h3>
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                No aparecerás en las búsquedas y no recibirás nuevas reservas.
+                Activa tu perfil cuando estés listo para recibir clientes.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 import { type ReactNode } from "react";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <main className="flex-1">{children}</main>
                 <Footer />
               </div>
+              <Toaster position="top-right" richColors closeButton />
             </I18nProvider>
           </QueryProvider>
         </ThemeProvider>
