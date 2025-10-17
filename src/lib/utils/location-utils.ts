@@ -30,5 +30,5 @@ export function formatLocation(
     return parts.length > 0 ? parts.join(", ") : "Ubicación no especificada";
   }
 
-  return "Ubicación no especificada";
+  return location;
 }

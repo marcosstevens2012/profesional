@@ -1,6 +1,5 @@
 "use client";
 
-import { Breadcrumbs } from "@/components/breadcrumbs";
 import {
   Button,
   Card,
@@ -12,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { paymentsAPI } from "@/lib/api/payments";
 import { useProfileBySlug } from "@/lib/hooks/use-profiles";
 import { formatLocation } from "@/lib/utils/location-utils";
-import { ArrowLeft, MapPin, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -133,12 +132,6 @@ function ConsultationRequestModal({
         {/* Beneficios clave */}
         <div className="space-y-3 mb-6">
           <div className="flex items-center gap-3 text-sm">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span className="text-gray-700">
-              Respuesta en {professional.responseTime || "24 horas"}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
             <span className="text-gray-700">Pago seguro con MercadoPago</span>
           </div>
@@ -171,7 +164,7 @@ function ConsultationRequestModal({
                 Procesando...
               </div>
             ) : (
-              "Pagar y Soliconsultar"
+              "Pagar y Solicitar Consulta"
             )}
           </Button>
         </div>
@@ -228,17 +221,9 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
     );
   }
 
-  const breadcrumbItems = [
-    { label: "Inicio", href: "/" },
-    { label: "Profesionales", href: "/profesionales" },
-    { label: prof?.user?.name || "Cargando...", href: "#" },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <Breadcrumbs items={breadcrumbItems} />
-
         <div className="mt-8 grid lg:grid-cols-3 gap-8">
           {/* Perfil Principal */}
           <div className="lg:col-span-2 space-y-6">
@@ -294,10 +279,6 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                         <div className="flex items-center gap-1 text-gray-600">
                           <MapPin className="h-4 w-4" />
                           <span>{formatLocation(prof.location)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>Responde en {prof.responseTime || "24h"}</span>
                         </div>
                       </div>
                     </div>
@@ -463,9 +444,6 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                   <div className="text-gray-600 font-medium mb-1">
                     Precio fijo • Sin sorpresas
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Todas las consultas cuestan lo mismo
-                  </div>
                 </div>
 
                 <Button
@@ -481,12 +459,6 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                     <div className="flex items-center gap-2 text-blue-700">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                       <span className="font-medium">
-                        Respuesta garantizada en {prof.responseTime || "24h"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-blue-700">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                      <span className="font-medium">
                         Pago 100% seguro con MercadoPago
                       </span>
                     </div>
@@ -496,41 +468,6 @@ export default function ProfessionalPage({ params }: ProfessionalPageProps) {
                         Notificación inmediata al profesional
                       </span>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Stats compactas */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-bold text-lg">{prof.rating}</span>
-                    </div>
-                    <div className="text-xs text-gray-600">Calificación</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-blue-600">
-                      {prof.reviewCount}
-                    </div>
-                    <div className="text-xs text-gray-600">Consultas</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-purple-600">
-                      {prof.experience || 1}+
-                    </div>
-                    <div className="text-xs text-gray-600">Años exp.</div>
-                  </div>
-                  <div>
-                    <div
-                      className={`font-bold text-lg ${prof.isVerified ? "text-green-600" : "text-gray-400"}`}
-                    >
-                      {prof.isVerified ? "✓" : "✗"}
-                    </div>
-                    <div className="text-xs text-gray-600">Verificado</div>
                   </div>
                 </div>
               </CardContent>

@@ -21,14 +21,33 @@ export function adaptBackendProfessionalToFrontend(
   const lastName = backendData.user?.profile?.lastName || "";
   const fullName = `${firstName} ${lastName}`.trim();
 
-  const city = backendData.location?.city || "";
-  const province = backendData.location?.province || "";
-  const location = `${city}${city && province ? ", " : ""}${province}`;
+  // Handle location - it might come as an object with city/province or as a direct property
+  let location = "";
+  if (backendData.location) {
+    if (typeof backendData.location === "string") {
+      location = backendData.location;
+    } else if (typeof backendData.location === "object") {
+      const city = backendData.location.city || "";
+      const province = backendData.location.province || "";
+      location = `${city}${city && province ? ", " : ""}${province}`.trim();
+    }
+  }
+
+  // Fallback to profile location if professional location is not available
+  if (!location && backendData.user?.profile?.location) {
+    const profileLoc = backendData.user.profile.location;
+    if (typeof profileLoc === "string") {
+      location = profileLoc;
+    } else if (typeof profileLoc === "object") {
+      const city = profileLoc.city || "";
+      const province = profileLoc.province || "";
+      location = `${city}${city && province ? ", " : ""}${province}`.trim();
+    }
+  }
 
   // Convert pricePerSession to hourly rate (assuming session duration)
-  const sessionDuration = backendData.standardDuration || 60; // minutes
   const pricePerSession = parseInt(backendData.pricePerSession || "0");
-  const hourlyRate = Math.round((pricePerSession * 60) / sessionDuration);
+  const hourlyRate = pricePerSession;
 
   return {
     id: backendData.id,

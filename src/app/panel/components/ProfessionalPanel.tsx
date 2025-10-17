@@ -150,10 +150,6 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
             Bienvenido/a {user.name}, gestiona tu práctica profesional
           </p>
         </div>
-        <div className="flex space-x-3">
-          <Button variant="outline">Configurar Disponibilidad</Button>
-          <Button>Nueva Consulta</Button>
-        </div>
       </div>
 
       {/* Stats Cards */}
@@ -285,7 +281,6 @@ function AppointmentsTab({
             Las nuevas consultas aparecerán aquí cuando los clientes las
             reserven
           </p>
-          <Button>Configurar Disponibilidad</Button>
         </CardContent>
       </Card>
     );

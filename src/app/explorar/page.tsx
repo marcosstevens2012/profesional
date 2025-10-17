@@ -1,12 +1,12 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { Button, Card, CardContent } from "@/components/ui";
 import { Input } from "@/components/ui/input";
 import { FrontendProfessional } from "@/lib/adapters/professional-adapter";
 import { useSearchProfessionals } from "@/lib/hooks/use-search";
 import { useServiceCategories } from "@/lib/hooks/use-services";
 import { formatLocation } from "@/lib/utils/location-utils";
-import { Button, Card, CardContent } from "@/components/ui";
 import { Filter, MapPin, Search, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -186,9 +186,6 @@ export default function ExplorarPage() {
                               <div className="mt-3">
                                 <span className="text-lg font-bold">
                                   ${professional.hourlyRate?.toLocaleString()}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  /hora
                                 </span>
                               </div>
                             </div>
