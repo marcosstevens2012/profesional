@@ -2,22 +2,28 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUpdateMyProfile } from "@/hooks/useProfessionalProfile";
+import { authAPI } from "@/lib/auth/auth-api";
 import { useAuth } from "@/lib/auth/auth-hooks";
+import { AlertCircle, CheckCircle, Loader2, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const updateProfile = useUpdateMyProfile();
   const [formData, setFormData] = useState({
     phone: "",
     bio: "",
-    specialties: "",
+    website: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   // Redirect if not professional
   React.useEffect(() => {
@@ -26,38 +32,126 @@ export default function OnboardingPage() {
     }
   }, [user, router]);
 
+  const handleResendVerification = async () => {
+    if (!user?.email) return;
+
+    try {
+      setIsResendingEmail(true);
+      await authAPI.resendVerificationEmail(user.email);
+      toast.success(
+        "Email de verificación enviado. Revisa tu bandeja de entrada."
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Error al enviar el email de verificación");
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
 
     try {
-      // TODO: Implement profile completion API call
-      console.log("Completing professional profile:", formData);
+      await updateProfile.mutateAsync({
+        phone: formData.phone || undefined,
+        bio: formData.bio || undefined,
+        website: formData.website || undefined,
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      router.push("/dashboard");
+      toast.success("Perfil actualizado correctamente");
+      router.push("/panel");
     } catch (err: any) {
       setError(err.message || "Error al completar el perfil");
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleSkip = () => {
-    router.push("/dashboard");
+    router.push("/panel");
   };
 
   if (!user) {
-    return <div>Cargando...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Usuario no ha verificado su email
+  const isEmailVerified = user.status === "ACTIVE";
+
+  if (!isEmailVerified) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center mb-6">
+            <Mail className="h-16 w-16 text-primary" />
+          </div>
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
+            Verificá tu email
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Antes de completar tu perfil profesional
+          </p>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <Card className="p-8">
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Enviamos un email de verificación a{" "}
+                <strong>{user.email}</strong>. Por favor, verificá tu email
+                antes de continuar.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600">
+                <p className="mb-2">
+                  ¿No recibiste el email? Revisá tu carpeta de spam o hacé clic
+                  en el botón de abajo para reenviar:
+                </p>
+              </div>
+
+              <Button
+                onClick={handleResendVerification}
+                disabled={isResendingEmail}
+                className="w-full"
+                variant="outline"
+              >
+                {isResendingEmail ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Reenviar email de verificación
+                  </>
+                )}
+              </Button>
+
+              <div className="pt-4 border-t text-center">
+                <p className="text-xs text-gray-500">
+                  Una vez verificado tu email, podrás completar tu perfil
+                  profesional
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center gap-2 mb-6">
+          <CheckCircle className="h-8 w-8 text-green-600" />
           <h1 className="text-3xl font-bold text-gray-900">Profesional</h1>
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
@@ -106,28 +200,26 @@ export default function OnboardingPage() {
                     setFormData((prev) => ({ ...prev, bio: e.target.value }))
                   }
                   className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Contanos sobre tu experiencia, formación y qué servicios ofrecés..."
+                  placeholder="Contanos sobre tu experiencia, formación y servicios..."
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="specialties">
-                Especialidades (separadas por comas)
-              </Label>
+              <Label htmlFor="website">Sitio Web (opcional)</Label>
               <div className="mt-1">
                 <Input
-                  id="specialties"
-                  name="specialties"
-                  type="text"
-                  value={formData.specialties}
+                  id="website"
+                  name="website"
+                  type="url"
+                  value={formData.website}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      specialties: e.target.value,
+                      website: e.target.value,
                     }))
                   }
-                  placeholder="Ej: Plomería, Electricidad, Carpintería"
+                  placeholder="https://tusitioweb.com"
                 />
               </div>
             </div>
@@ -138,12 +230,16 @@ export default function OnboardingPage() {
                 variant="outline"
                 onClick={handleSkip}
                 className="flex-1"
-                disabled={isLoading}
+                disabled={updateProfile.isPending}
               >
                 Completar más tarde
               </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1">
-                {isLoading ? "Guardando..." : "Completar perfil"}
+              <Button
+                type="submit"
+                disabled={updateProfile.isPending}
+                className="flex-1"
+              >
+                {updateProfile.isPending ? "Guardando..." : "Completar perfil"}
               </Button>
             </div>
           </form>

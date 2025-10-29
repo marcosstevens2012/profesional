@@ -9,10 +9,30 @@ import {
   Label,
   Switch,
 } from "@/components/ui";
-import { useAuthStore } from "@/lib/auth/auth-store";
-import { Calendar, DollarSign, Star, TrendingUp, Users } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useProfessionalDashboard } from "@/hooks/useProfessionalBookings";
+import {
+  useActiveStatus,
+  useBookingStats,
+  useMyProfile,
+  useMyReviews,
+  useMyReviewStats,
+  useProfileStats,
+  useRevenueStats,
+  useToggleActiveStatus,
+} from "@/hooks/useProfessionalProfile";
+import { useAuth } from "@/lib/auth/auth-hooks";
+import {
+  AlertCircle,
+  Calendar,
+  DollarSign,
+  Mail,
+  Star,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 interface ProfessionalPanelProps {
   user: {
@@ -33,167 +53,156 @@ const tabs = [
 
 export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
   const [activeTab, setActiveTab] = useState("appointments");
-  const { tokens } = useAuthStore();
-  const [appointments, setAppointments] = useState([]);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isActive, setIsActive] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
-  const [stats, setStats] = useState({
-    totalAppointments: 0,
-    monthlyEarnings: 0,
-    totalClients: 0,
-    averageRating: 0,
-  });
+  const { user: authUser } = useAuth();
 
-  // Fetch professional data from API
-  useEffect(() => {
-    const fetchProfessionalData = async () => {
-      if (!tokens?.accessToken) {
-        console.warn("No access token available");
-        setLoading(false);
-        return;
-      }
+  // Use new hooks
+  const { data: profile, isLoading: profileLoading } = useMyProfile();
+  const { data: activeStatusData } = useActiveStatus();
+  const toggleActive = useToggleActiveStatus();
+  const { data: bookingStats } = useBookingStats();
+  const { data: revenueStats } = useRevenueStats();
+  const { data: profileStatsData } = useProfileStats();
+  const dashboardData = useProfessionalDashboard();
 
-      try {
-        setLoading(true);
+  const isActive = activeStatusData?.isActive ?? false;
+  const isEmailVerified = authUser?.status === "ACTIVE";
 
-        // Fetch professional profile
-        const profileResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/profiles/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-            },
-          }
-        );
+  const handleToggleActive = () => {
+    toggleActive.mutate();
+  };
 
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json();
-          setProfile(profileData);
-        }
+  // Mostrar alerta si el email no está verificado
+  if (!isEmailVerified) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Mail className="h-8 w-8 text-amber-600" />
+              <CardTitle className="text-amber-900">
+                Verificación de Email Pendiente
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert className="border-amber-300 bg-white">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="mb-4">
+                  Necesitás verificar tu email <strong>{user.email}</strong>{" "}
+                  para acceder a tu panel profesional.
+                </p>
+                <p className="text-sm text-gray-600">
+                  Revisá tu bandeja de entrada o spam. Si no recibiste el email,
+                  podés solicitar uno nuevo desde la página de onboarding.
+                </p>
+              </AlertDescription>
+            </Alert>
+            <div className="mt-6">
+              <Link href="/onboarding">
+                <Button className="w-full sm:w-auto">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Ir a Verificación
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-        // Fetch active status
-        const activeStatusResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/profiles/me/active-status`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-            },
-          }
-        );
+  // Verificar si el perfil profesional está completo
+  const isProfileIncomplete =
+    profile &&
+    (!profile.bio ||
+      !profile.description ||
+      profile.bio.trim() === "" ||
+      profile.description.trim() === "");
 
-        if (activeStatusResponse.ok) {
-          const statusData = await activeStatusResponse.json();
-          setIsActive(statusData.isActive);
-        }
+  // Mostrar alerta si el perfil está incompleto
+  if (isEmailVerified && isProfileIncomplete && !profileLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-blue-600" />
+              <CardTitle className="text-blue-900">
+                Completá tu Perfil Profesional
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert className="border-blue-300 bg-white">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="mb-4">
+                  Tu email está verificado, pero necesitás completar tu perfil
+                  profesional para comenzar a recibir consultas.
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  Por favor, completá la siguiente información:
+                </p>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  {(!profile?.bio || profile.bio.trim() === "") && (
+                    <li>Biografía breve</li>
+                  )}
+                  {(!profile?.description ||
+                    profile.description.trim() === "") && (
+                    <li>Descripción detallada de tus servicios</li>
+                  )}
+                </ul>
+              </AlertDescription>
+            </Alert>
+            <div className="mt-6">
+              <Link href="/onboarding">
+                <Button className="w-full sm:w-auto">
+                  <Users className="mr-2 h-4 w-4" />
+                  Completar Perfil
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-        // Fetch appointments
-        const appointmentsResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/bookings`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-            },
-          }
-        );
-
-        if (appointmentsResponse.ok) {
-          const appointmentsData = await appointmentsResponse.json();
-
-          // Filter appointments for this professional user
-          // Appointments are linked via professional.userId to our logged-in user.id
-          const userAppointments = appointmentsData.filter(
-            (apt: any) => apt.professional?.userId === user.id
-          );
-
-          setAppointments(userAppointments);
-
-          // Calculate stats
-          const totalAppointments = userAppointments.length;
-          const completedAppointments = userAppointments.filter(
-            (apt: any) => apt.status === "COMPLETED"
-          );
-          const monthlyEarnings = completedAppointments.reduce(
-            (sum: number, apt: any) => sum + Number(apt.price),
-            0
-          );
-          const uniqueClients = new Set(
-            userAppointments.map((apt: any) => apt.clientId)
-          ).size;
-
-          setStats({
-            totalAppointments,
-            monthlyEarnings,
-            totalClients: uniqueClients,
-            averageRating: 4.8, // This would come from reviews API
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching professional data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfessionalData();
-  }, [user.id, tokens?.accessToken]);
-
-  const handleToggleActive = async () => {
-    if (!tokens?.accessToken) {
-      toast.error("No estás autenticado");
-      return;
-    }
-
-    setToggleLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/profiles/me/toggle-active`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsActive(data.isActive);
-        toast.success(
-          data.isActive
-            ? "Perfil activado - Ahora estás visible para los clientes"
-            : "Perfil desactivado - No recibirás nuevas reservas"
-        );
-      } else {
-        const error = await response.json();
-        toast.error(error.message || "Error al cambiar el estado");
-      }
-    } catch (error) {
-      console.error("Error toggling active status:", error);
-      toast.error("Error al cambiar el estado del perfil");
-    } finally {
-      setToggleLoading(false);
-    }
+  const stats = {
+    totalAppointments: bookingStats?.totalBookings ?? 0,
+    monthlyEarnings: revenueStats?.revenueThisMonth ?? 0,
+    totalClients: 0, // This would come from a separate endpoint
+    averageRating: profileStatsData?.averageRating ?? 0,
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "appointments":
         return (
-          <AppointmentsTab appointments={appointments} loading={loading} />
+          <AppointmentsTab
+            waitingBookings={dashboardData.waitingBookings}
+            readyMeetings={dashboardData.meetings}
+            loading={dashboardData.isLoading}
+          />
         );
       case "clients":
-        return <ClientsTab appointments={appointments} />;
+        return <ClientsTab />;
       case "earnings":
-        return <EarningsTab appointments={appointments} stats={stats} />;
+        return <EarningsTab stats={stats} />;
       case "reviews":
         return <ReviewsTab />;
       case "profile":
-        return <ProfileTab user={user} profile={profile} />;
+        return (
+          <ProfileTab user={user} profile={profile} loading={profileLoading} />
+        );
       default:
         return (
-          <AppointmentsTab appointments={appointments} loading={loading} />
+          <AppointmentsTab
+            waitingBookings={dashboardData.waitingBookings}
+            readyMeetings={dashboardData.meetings}
+            loading={dashboardData.isLoading}
+          />
         );
     }
   };
@@ -224,7 +233,7 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
               id="active-toggle"
               checked={isActive}
               onCheckedChange={handleToggleActive}
-              disabled={toggleLoading}
+              disabled={toggleActive.isPending}
             />
           </div>
         </div>
@@ -348,10 +357,12 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
 
 // Tab Components for Professional Panel
 function AppointmentsTab({
-  appointments,
+  waitingBookings,
+  readyMeetings,
   loading,
 }: {
-  appointments: any[];
+  waitingBookings: any[];
+  readyMeetings: any[];
   loading: boolean;
 }) {
   if (loading) {
@@ -365,13 +376,15 @@ function AppointmentsTab({
     );
   }
 
-  if (appointments.length === 0) {
+  const hasContent = waitingBookings.length > 0 || readyMeetings.length > 0;
+
+  if (!hasContent) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
           <h3 className="text-xl font-semibold mb-2">
-            No tienes consultas programadas
+            No tienes consultas pendientes
           </h3>
           <p className="text-gray-600 mb-4">
             Las nuevas consultas aparecerán aquí cuando los clientes las
@@ -382,63 +395,45 @@ function AppointmentsTab({
     );
   }
 
-  const upcomingAppointments = appointments.filter(
-    (apt: any) => new Date(apt.scheduledAt) > new Date()
-  );
-
-  const recentAppointments = appointments
-    .filter((apt: any) => new Date(apt.scheduledAt) <= new Date())
-    .slice(0, 5);
-
   return (
     <div className="space-y-6">
-      {/* Upcoming Appointments */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">
-          Próximas Consultas ({upcomingAppointments.length})
-        </h3>
-        {upcomingAppointments.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              No tienes consultas próximas programadas
-            </CardContent>
-          </Card>
-        ) : (
+      {/* Waiting Bookings */}
+      {waitingBookings.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">
+            Esperando Aceptación ({waitingBookings.length})
+          </h3>
           <div className="space-y-4">
-            {upcomingAppointments.map((appointment: any) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                isUpcoming={true}
-              />
+            {waitingBookings.map((booking: any) => (
+              <BookingCard key={booking.id} booking={booking} type="waiting" />
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Recent Appointments */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Consultas Recientes</h3>
-        <div className="space-y-4">
-          {recentAppointments.map((appointment: any) => (
-            <AppointmentCard
-              key={appointment.id}
-              appointment={appointment}
-              isUpcoming={false}
-            />
-          ))}
         </div>
-      </div>
+      )}
+
+      {/* Ready Meetings */}
+      {readyMeetings.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">
+            Listo para Unirse ({readyMeetings.length})
+          </h3>
+          <div className="space-y-4">
+            {readyMeetings.map((booking: any) => (
+              <BookingCard key={booking.id} booking={booking} type="ready" />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function AppointmentCard({
-  appointment,
-  isUpcoming,
+function BookingCard({
+  booking,
+  type,
 }: {
-  appointment: any;
-  isUpcoming: boolean;
+  booking: any;
+  type: "waiting" | "ready";
 }) {
   return (
     <Card>
@@ -446,49 +441,32 @@ function AppointmentCard({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-2">
             <h4 className="font-semibold">
-              Consulta con {appointment.client?.name || "Cliente"}
+              Consulta con {booking.user?.name || "Cliente"}
             </h4>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <span>
-                {new Date(appointment.scheduledAt).toLocaleDateString("es-AR")}
+                {new Date(booking.scheduledAt).toLocaleDateString("es-AR")}
               </span>
               <span>
-                {new Date(appointment.scheduledAt).toLocaleTimeString("es-AR", {
+                {new Date(booking.scheduledAt).toLocaleTimeString("es-AR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </span>
-              <span>ARS ${Number(appointment.price).toLocaleString()}</span>
+              <span>ARS ${Number(booking.price).toLocaleString()}</span>
             </div>
-            {appointment.notes && (
+            {booking.notes && (
               <p className="text-sm text-muted-foreground">
-                Notas: {appointment.notes}
+                Notas: {booking.notes}
               </p>
             )}
           </div>
           <div className="flex items-center space-x-3">
-            <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                appointment.status === "COMPLETED"
-                  ? "bg-green-100 text-green-800"
-                  : appointment.status === "CONFIRMED"
-                    ? "bg-blue-100 text-blue-800"
-                    : appointment.status === "PENDING"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {appointment.status === "COMPLETED"
-                ? "Completada"
-                : appointment.status === "CONFIRMED"
-                  ? "Confirmada"
-                  : appointment.status === "PENDING"
-                    ? "Pendiente"
-                    : appointment.status}
-            </span>
-            {isUpcoming && (
-              <Button variant="outline" size="sm">
-                Ver Detalles
+            {type === "waiting" ? (
+              <Button size="sm">Aceptar</Button>
+            ) : (
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                Unirse a la Reunión
               </Button>
             )}
           </div>
@@ -498,85 +476,49 @@ function AppointmentCard({
   );
 }
 
-function ClientsTab({ appointments }: { appointments: any[] }) {
-  const uniqueClients = appointments.reduce((acc: any[], appointment: any) => {
-    if (
-      appointment.client &&
-      !acc.find((c) => c.id === appointment.client.id)
-    ) {
-      acc.push({
-        ...appointment.client,
-        lastAppointment: appointment.scheduledAt,
-        totalAppointments: appointments.filter(
-          (a) => a.client?.id === appointment.client.id
-        ).length,
-      });
-    }
-    return acc;
-  }, []);
-
+function ClientsTab() {
+  // This would use a dedicated hook to fetch client data
+  // For now, show placeholder
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
-          Mis Clientes ({uniqueClients.length})
-        </h3>
-      </div>
-
-      {uniqueClients.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Users size={48} className="mx-auto mb-4 text-gray-400" />
-            <h3 className="text-xl font-semibold mb-2">
-              Aún no tienes clientes
-            </h3>
-            <p className="text-gray-600">
-              Los clientes aparecerán aquí después de sus primeras consultas
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {uniqueClients.map((client: any) => (
-            <Card key={client.id}>
-              <CardContent className="p-6">
-                <div className="space-y-3">
-                  <h4 className="font-semibold">{client.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {client.email}
-                  </p>
-                  <div className="text-sm">
-                    <p>Consultas: {client.totalAppointments}</p>
-                    <p>
-                      Última consulta:{" "}
-                      {new Date(client.lastAppointment).toLocaleDateString(
-                        "es-AR"
-                      )}
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Ver Historial
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+    <Card>
+      <CardContent className="p-8 text-center">
+        <Users size={48} className="mx-auto mb-4 text-gray-400" />
+        <h3 className="text-xl font-semibold mb-2">Sección de Clientes</h3>
+        <p className="text-gray-600">
+          Aquí podrás ver el historial de tus clientes y sus consultas
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
 function EarningsTab({
-  appointments,
   stats,
 }: {
-  appointments: any[];
-  stats: any;
+  stats: {
+    totalAppointments: number;
+    monthlyEarnings: number;
+    totalClients: number;
+    averageRating: number;
+  };
 }) {
-  const completedAppointments = appointments.filter(
-    (apt) => apt.status === "COMPLETED"
-  );
+  const { data: revenueStats, isLoading } = useRevenueStats();
+  const { data: bookingStats } = useBookingStats();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando estadísticas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const completedBookings = bookingStats?.completedBookings ?? 0;
+  const totalRevenue = revenueStats?.totalRevenue ?? 0;
+  const averageValue = revenueStats?.averageSessionValue ?? 0;
 
   return (
     <div className="space-y-6">
@@ -594,7 +536,7 @@ function EarningsTab({
         <Card>
           <CardContent className="p-6 text-center">
             <TrendingUp className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-            <p className="text-2xl font-bold">{completedAppointments.length}</p>
+            <p className="text-2xl font-bold">{completedBookings}</p>
             <p className="text-sm text-muted-foreground">
               Consultas Completadas
             </p>
@@ -605,12 +547,7 @@ function EarningsTab({
           <CardContent className="p-6 text-center">
             <DollarSign className="h-8 w-8 mx-auto mb-2 text-purple-600" />
             <p className="text-2xl font-bold">
-              $
-              {completedAppointments.length > 0
-                ? Math.round(
-                    stats.monthlyEarnings / completedAppointments.length
-                  ).toLocaleString()
-                : 0}
+              ${averageValue.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground">
               Promedio por Consulta
@@ -621,36 +558,41 @@ function EarningsTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>Historial de Ingresos</CardTitle>
+          <CardTitle>Resumen de Ingresos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {completedAppointments.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No hay ingresos registrados aún
+            <div className="flex justify-between items-center p-3 border rounded">
+              <div>
+                <p className="font-medium">Ingresos Totales</p>
+                <p className="text-sm text-muted-foreground">
+                  Acumulado histórico
+                </p>
+              </div>
+              <p className="font-bold text-green-600">
+                ${totalRevenue.toLocaleString()}
               </p>
-            ) : (
-              completedAppointments.map((appointment: any) => (
-                <div
-                  key={appointment.id}
-                  className="flex justify-between items-center p-3 border rounded"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {appointment.client?.name || "Cliente"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(appointment.scheduledAt).toLocaleDateString(
-                        "es-AR"
-                      )}
-                    </p>
-                  </div>
-                  <p className="font-bold text-green-600">
-                    +${Number(appointment.price).toLocaleString()}
-                  </p>
-                </div>
-              ))
-            )}
+            </div>
+            <div className="flex justify-between items-center p-3 border rounded">
+              <div>
+                <p className="font-medium">Ingresos Este Mes</p>
+                <p className="text-sm text-muted-foreground">Mes actual</p>
+              </div>
+              <p className="font-bold text-green-600">
+                ${(revenueStats?.revenueThisMonth ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="flex justify-between items-center p-3 border rounded">
+              <div>
+                <p className="font-medium">Mes Anterior</p>
+                <p className="text-sm text-muted-foreground">
+                  Para comparación
+                </p>
+              </div>
+              <p className="font-bold text-gray-600">
+                ${(revenueStats?.revenueLastMonth ?? 0).toLocaleString()}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -659,22 +601,152 @@ function EarningsTab({
 }
 
 function ReviewsTab() {
+  const { data: reviewStats, isLoading } = useMyReviewStats();
+  const { data: reviewsData } = useMyReviews({ limit: 10 });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando reseñas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hasReviews = (reviewsData?.data.length ?? 0) > 0;
+
+  if (!hasReviews) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Star size={48} className="mx-auto mb-4 text-gray-400" />
+          <h3 className="text-xl font-semibold mb-2">Aún no tienes reseñas</h3>
+          <p className="text-gray-600">
+            Las reseñas de tus clientes aparecerán aquí
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card>
-      <CardContent className="p-8 text-center">
-        <Star size={48} className="mx-auto mb-4 text-gray-400" />
-        <h3 className="text-xl font-semibold mb-2">
-          Sistema de reseñas próximamente
-        </h3>
-        <p className="text-gray-600">
-          Aquí podrás ver las reseñas y calificaciones de tus clientes
-        </p>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Star className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
+            <p className="text-2xl font-bold">
+              {reviewStats?.averageRating.toFixed(1) ?? "0.0"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Calificación Promedio
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Users className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+            <p className="text-2xl font-bold">
+              {reviewStats?.totalReviews ?? 0}
+            </p>
+            <p className="text-sm text-muted-foreground">Total de Reseñas</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
+            <p className="text-2xl font-bold">
+              {reviewStats?.ratingDistribution[5] ?? 0}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Reseñas de 5 Estrellas
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Reviews */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Reseñas Recientes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {reviewsData?.data.map((review: any) => (
+              <div
+                key={review.id}
+                className="border-b last:border-0 pb-4 last:pb-0"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium">{review.clientName}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= review.rating
+                              ? "text-yellow-500 fill-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(review.createdAt).toLocaleDateString("es-AR")}
+                  </p>
+                </div>
+                {review.comment && (
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {review.comment}
+                  </p>
+                )}
+                {review.response && (
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded mt-2">
+                    <p className="text-sm font-medium mb-1">Tu respuesta:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {review.response}
+                    </p>
+                  </div>
+                )}
+                {!review.hasResponse && (
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Responder
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-function ProfileTab({ user, profile }: { user: any; profile: any }) {
+function ProfileTab({
+  user,
+  profile,
+  loading,
+}: {
+  user: any;
+  profile: any;
+  loading: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -700,24 +772,39 @@ function ProfileTab({ user, profile }: { user: any; profile: any }) {
               readOnly
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Especialidad</label>
-            <input
-              type="text"
-              defaultValue={profile?.serviceCategory?.name || "No especificada"}
-              className="w-full p-2 border rounded-md bg-background"
-              readOnly
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Precio por consulta</label>
-            <input
-              type="text"
-              defaultValue={`ARS $${Number(profile?.pricePerHour || 0).toLocaleString()}`}
-              className="w-full p-2 border rounded-md bg-background"
-              readOnly
-            />
-          </div>
+          {profile?.serviceCategory?.name && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Especialidad</label>
+              <input
+                type="text"
+                defaultValue={profile.serviceCategory.name}
+                className="w-full p-2 border rounded-md bg-background"
+                readOnly
+              />
+            </div>
+          )}
+          {profile?.pricePerSession && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Precio por sesión</label>
+              <input
+                type="text"
+                defaultValue={`ARS $${Number(profile.pricePerSession).toLocaleString()}`}
+                className="w-full p-2 border rounded-md bg-background"
+                readOnly
+              />
+            </div>
+          )}
+          {profile?.standardDuration && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Duración estándar</label>
+              <input
+                type="text"
+                defaultValue={`${profile.standardDuration} minutos`}
+                className="w-full p-2 border rounded-md bg-background"
+                readOnly
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -728,6 +815,17 @@ function ProfileTab({ user, profile }: { user: any; profile: any }) {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">{profile.description}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {profile?.bio && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Biografía</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">{profile.bio}</p>
           </CardContent>
         </Card>
       )}

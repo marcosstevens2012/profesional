@@ -4,6 +4,7 @@ import type {
   ClientBookingsResponse,
   JoinMeetingResponse,
   MeetingStatusResponse,
+  ProfessionalMeetingsResponse,
   StartMeetingResponse,
   WaitingBookingsResponse,
 } from "../contracts/schemas";
@@ -36,9 +37,9 @@ export const bookingsAPI = {
    * Obtener reuniones pendientes del profesional
    * GET /api/bookings/professional/meetings
    */
-  async getProfessionalMeetings(): Promise<WaitingBookingsResponse> {
+  async getProfessionalMeetings(): Promise<ProfessionalMeetingsResponse> {
     try {
-      const response = await apiClient.get<WaitingBookingsResponse>(
+      const response = await apiClient.get<ProfessionalMeetingsResponse>(
         "/bookings/professional/meetings"
       );
       return response.data;

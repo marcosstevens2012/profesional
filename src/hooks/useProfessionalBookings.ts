@@ -12,6 +12,11 @@ export function useWaitingBookings() {
     queryFn: () => bookingsAPI.getWaitingBookings(),
     refetchInterval: 30000, // Refetch cada 30 segundos para estar actualizado
     staleTime: 10000, // Considera los datos obsoletos después de 10 segundos
+    retry: (failureCount, error: any) => {
+      // No reintentar si es 404 (usuario no es profesional)
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 }
 
@@ -24,6 +29,11 @@ export function useProfessionalMeetings() {
     queryFn: () => bookingsAPI.getProfessionalMeetings(),
     refetchInterval: 30000, // Refetch cada 30 segundos
     staleTime: 10000,
+    retry: (failureCount, error: any) => {
+      // No reintentar si es 404 (usuario no es profesional)
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 }
 
@@ -73,7 +83,7 @@ export function useProfessionalDashboard() {
   return {
     waitingBookings: waitingBookings.data?.bookings || [],
     waitingCount: waitingBookings.data?.count || 0,
-    meetings: meetings.data?.bookings || [],
+    meetings: meetings.data?.meetings || [],
     meetingsCount: meetings.data?.count || 0,
     isLoading: waitingBookings.isLoading || meetings.isLoading,
     error: waitingBookings.error || meetings.error,

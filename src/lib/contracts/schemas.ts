@@ -102,16 +102,23 @@ export const ProfileSchema = z
   .object({
     id: IdSchema,
     userId: IdSchema,
+    firstName: z.string().min(1).max(100),
+    lastName: z.string().min(1).max(100),
+    avatar: z.string().url().nullable(),
     phone: z
       .string()
       .regex(/^\+?[1-9]\d{1,14}$/)
-      .optional(),
+      .nullable(),
     bio: z.string().max(500).optional(),
     locationId: IdSchema.optional(),
+    deletedAt: z.coerce.date().nullable(),
   })
   .merge(TimestampsSchema);
 
 export const CreateProfileSchema = z.object({
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  avatar: z.string().url().optional(),
   phone: z
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/)
@@ -130,6 +137,7 @@ export const ProfessionalProfileSchema = z
     userId: IdSchema,
     title: z.string().min(1).max(200),
     description: z.string().max(2000),
+    bio: z.string().max(500).optional(),
     hourlyRate: z.number().min(0),
     currency: z.enum(["ARS", "USD"]).default("ARS"),
     experience: z.number().min(0).max(50),
@@ -142,12 +150,15 @@ export const ProfessionalProfileSchema = z
     portfolio: z.array(z.string().url()).default([]),
     certifications: z.array(z.string()).default([]),
     languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
+    phone: z.string().optional(),
+    website: z.string().url().optional(),
   })
   .merge(TimestampsSchema);
 
 export const CreateProfessionalProfileSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000),
+  bio: z.string().max(500).optional(),
   hourlyRate: z.number().min(0),
   currency: z.enum(["ARS", "USD"]).default("ARS"),
   experience: z.number().min(0).max(50),
@@ -155,6 +166,8 @@ export const CreateProfessionalProfileSchema = z.object({
   portfolio: z.array(z.string().url()).default([]),
   certifications: z.array(z.string()).default([]),
   languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
+  phone: z.string().optional(),
+  website: z.string().url().optional(),
 });
 
 export const UpdateProfessionalProfileSchema =
@@ -280,7 +293,9 @@ export const BookingStatusEnum = z.enum([
 export const MeetingStatusEnum = z.enum([
   "PENDING",
   "WAITING",
+  "ACCEPTED",
   "ACTIVE",
+  "IN_PROGRESS",
   "COMPLETED",
   "CANCELLED",
   "EXPIRED",
@@ -293,17 +308,19 @@ export const BookingSchema = z
     professionalId: IdSchema,
     scheduledAt: z.coerce.date(),
     duration: z.number().min(30).max(480).default(60), // minutes: 30min - 8h
-    price: z.number().min(0),
-    notes: z.string().max(2000).optional(),
+    price: z.string(), // Price is returned as string from API
+    notes: z.string().max(2000).nullable(),
     status: BookingStatusEnum.default("PENDING_PAYMENT"),
-    paymentId: IdSchema.optional(),
+    cancelledAt: z.coerce.date().nullable(),
+    cancellationReason: z.string().nullable(),
+    paymentId: IdSchema.nullable(),
 
     // Campos Jitsi
-    jitsiRoom: z.string().optional(),
+    jitsiRoom: z.string().nullable(),
     meetingStatus: MeetingStatusEnum.default("PENDING"),
-    meetingStartTime: z.coerce.date().optional(),
-    meetingEndTime: z.coerce.date().optional(),
-    meetingAcceptedAt: z.coerce.date().optional(),
+    meetingStartTime: z.coerce.date().nullable(),
+    meetingEndTime: z.coerce.date().nullable(),
+    meetingAcceptedAt: z.coerce.date().nullable(),
   })
   .merge(TimestampsSchema);
 
@@ -340,6 +357,12 @@ export const WaitingBookingsResponseSchema = z.object({
   bookings: z.array(BookingViewSchema),
   count: z.number(),
   message: z.string(),
+});
+
+// Professional Meetings Response
+export const ProfessionalMeetingsResponseSchema = z.object({
+  meetings: z.array(BookingViewSchema),
+  count: z.number(),
 });
 
 // Accept Meeting Response
@@ -859,6 +882,9 @@ export type MeetingStatus = z.infer<typeof MeetingStatusEnum>;
 // Booking API Response Types
 export type WaitingBookingsResponse = z.infer<
   typeof WaitingBookingsResponseSchema
+>;
+export type ProfessionalMeetingsResponse = z.infer<
+  typeof ProfessionalMeetingsResponseSchema
 >;
 export type AcceptMeetingResponse = z.infer<typeof AcceptMeetingResponseSchema>;
 export type ClientBookingsResponse = z.infer<

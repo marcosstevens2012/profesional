@@ -8,6 +8,7 @@ import {
   useHasNewBookingRequests,
   useProfessionalDashboard,
 } from "@/hooks/useProfessionalBookings";
+import { useAuthStore } from "@/lib/auth/auth-store";
 import {
   AlertCircle,
   Calendar,
@@ -21,6 +22,8 @@ import {
 import Link from "next/link";
 
 export default function ProfessionalDashboard() {
+  const { user } = useAuthStore();
+
   const {
     waitingBookings,
     waitingCount,
@@ -33,6 +36,24 @@ export default function ProfessionalDashboard() {
 
   const acceptMeeting = useAcceptMeeting();
   const { hasNewRequests } = useHasNewBookingRequests();
+
+  // Verificar si el usuario es profesional
+  if (user?.role !== "professional") {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-8 text-center">
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
+          <h2 className="mb-2 text-2xl font-bold">Acceso Restringido</h2>
+          <p className="mb-4 text-gray-600">
+            Esta sección es exclusiva para profesionales registrados.
+          </p>
+          <Link href="/onboarding">
+            <Button>Completar Registro como Profesional</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   const handleAcceptBooking = async (bookingId: string) => {
     try {
@@ -170,7 +191,10 @@ export default function ProfessionalDashboard() {
               <p className="text-2xl font-bold text-gray-900">
                 $
                 {waitingBookings
-                  .reduce((sum, booking) => sum + (booking.price || 0), 0)
+                  .reduce(
+                    (sum, booking) => sum + (parseFloat(booking.price) || 0),
+                    0
+                  )
                   .toLocaleString()}
               </p>
             </div>

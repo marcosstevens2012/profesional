@@ -152,6 +152,25 @@ class AuthAPI {
 
     return response.json();
   }
+
+  async resendVerificationEmail(email: string): Promise<MessageResponse> {
+    const response = await fetch(`${this.baseUrl}/resend-verification-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.message || "Error al reenviar email de verificación"
+      );
+    }
+
+    return response.json();
+  }
 }
 
 export const authAPI = new AuthAPI();
