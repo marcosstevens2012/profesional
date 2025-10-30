@@ -783,17 +783,6 @@ function ProfileTab({
               />
             </div>
           )}
-          {profile?.pricePerSession && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Precio por sesión</label>
-              <input
-                type="text"
-                defaultValue={`ARS $${Number(profile.pricePerSession).toLocaleString()}`}
-                className="w-full p-2 border rounded-md bg-background"
-                readOnly
-              />
-            </div>
-          )}
           {profile?.standardDuration && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Duración estándar</label>

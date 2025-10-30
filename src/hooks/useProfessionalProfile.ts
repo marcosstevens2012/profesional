@@ -18,7 +18,8 @@ export function useMyProfile() {
       return profilesAPI.getMyProfile(tokens.accessToken);
     },
     enabled: !!tokens?.accessToken,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - permite revalidación más frecuente
+    refetchOnWindowFocus: true, // Revalida cuando vuelves a la ventana
   });
 }
 

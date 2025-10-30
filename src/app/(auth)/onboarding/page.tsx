@@ -20,6 +20,7 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState({
     phone: "",
     bio: "",
+    description: "",
     website: "",
   });
   const [error, setError] = useState("");
@@ -56,6 +57,7 @@ export default function OnboardingPage() {
       await updateProfile.mutateAsync({
         phone: formData.phone || undefined,
         bio: formData.bio || undefined,
+        description: formData.description || undefined,
         website: formData.website || undefined,
       });
 
@@ -203,6 +205,37 @@ export default function OnboardingPage() {
                   placeholder="Contanos sobre tu experiencia, formación y servicios..."
                 />
               </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Descripción breve de tu experiencia profesional
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="description">
+                Descripción detallada de tus servicios{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+              <div className="mt-1">
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={6}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Descripción detallada de los servicios que ofrecés, tu metodología de trabajo, especialidades, etc..."
+                  required
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Esta información ayudará a los clientes a conocer en detalle tus
+                servicios
+              </p>
             </div>
 
             <div>
