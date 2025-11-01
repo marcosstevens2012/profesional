@@ -1,5 +1,6 @@
 "use client";
 
+import { FileUpload } from "@/components/FileUpload";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -360,23 +361,18 @@ export default function OnboardingPage() {
                     Documento del Título (opcional)
                   </Label>
                   <div className="mt-1">
-                    <Input
-                      id="titleDocumentUrl"
-                      name="titleDocumentUrl"
-                      type="url"
-                      value={formData.titleDocumentUrl}
-                      onChange={(e) =>
+                    <FileUpload
+                      onUploadComplete={(url) =>
                         setFormData((prev) => ({
                           ...prev,
-                          titleDocumentUrl: e.target.value,
+                          titleDocumentUrl: url,
                         }))
                       }
-                      placeholder="https://ejemplo.com/documento.pdf"
+                      currentFileUrl={formData.titleDocumentUrl}
                     />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    URL de tu título profesional escaneado (foto o PDF). Puedes
-                    subirlo a un servicio como Google Drive, Dropbox, etc.
+                    Sube tu título profesional escaneado (foto o PDF, max 10MB)
                   </p>
                 </div>
               </div>

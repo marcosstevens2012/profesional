@@ -117,12 +117,9 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
   }
 
   // Verificar si el perfil profesional está completo
+  // Solo verificar bio ya que description está en ProfessionalProfile
   const isProfileIncomplete =
-    profile &&
-    (!profile.bio ||
-      !profile.description ||
-      profile.bio.trim() === "" ||
-      profile.description.trim() === "");
+    profile && (!profile.bio || profile.bio.trim() === "");
 
   // Mostrar alerta si el perfil está incompleto
   if (isEmailVerified && isProfileIncomplete && !profileLoading) {
@@ -150,11 +147,7 @@ export default function ProfessionalPanel({ user }: ProfessionalPanelProps) {
                 </p>
                 <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                   {(!profile?.bio || profile.bio.trim() === "") && (
-                    <li>Biografía breve</li>
-                  )}
-                  {(!profile?.description ||
-                    profile.description.trim() === "") && (
-                    <li>Descripción detallada de tus servicios</li>
+                    <li>Biografía breve de tu perfil profesional</li>
                   )}
                 </ul>
               </AlertDescription>
@@ -835,17 +828,6 @@ function ProfileTab({
           )}
         </CardContent>
       </Card>
-
-      {profile?.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Descripción Profesional</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{profile.description}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {profile?.bio && (
         <Card>

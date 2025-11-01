@@ -109,7 +109,17 @@ export const ProfileSchema = z
       .string()
       .regex(/^\+?[1-9]\d{1,14}$/)
       .nullable(),
-    bio: z.string().max(500).optional(),
+    bio: z.string().max(1000).nullable().optional(),
+    dateOfBirth: z.coerce.date().nullable().optional(),
+    gender: z.string().max(50).nullable().optional(),
+    address: z.string().max(255).nullable().optional(),
+    city: z.string().max(100).nullable().optional(),
+    province: z.string().max(100).nullable().optional(),
+    postalCode: z.string().max(20).nullable().optional(),
+    country: z.string().max(100).nullable().optional().default("Argentina"),
+    emergencyContactName: z.string().max(200).nullable().optional(),
+    emergencyContactPhone: z.string().max(50).nullable().optional(),
+    preferences: z.any().nullable().optional(),
     locationId: IdSchema.optional(),
     deletedAt: z.coerce.date().nullable(),
   })
@@ -123,7 +133,16 @@ export const CreateProfileSchema = z.object({
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/)
     .optional(),
-  bio: z.string().max(500).optional(),
+  bio: z.string().max(1000).optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  gender: z.string().max(50).optional(),
+  address: z.string().max(255).optional(),
+  city: z.string().max(100).optional(),
+  province: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  country: z.string().max(100).optional().default("Argentina"),
+  emergencyContactName: z.string().max(200).optional(),
+  emergencyContactPhone: z.string().max(50).optional(),
   locationId: IdSchema.optional(),
 });
 
@@ -135,45 +154,76 @@ export const ProfessionalProfileSchema = z
   .object({
     id: IdSchema,
     userId: IdSchema,
-    title: z.string().min(1).max(200),
-    description: z.string().max(2000),
-    bio: z.string().max(500).optional(),
-    hourlyRate: z.number().min(0),
-    currency: z.enum(["ARS", "USD"]).default("ARS"),
-    experience: z.number().min(0).max(50),
-    isVerified: z.boolean().default(false),
-    isAvailable: z.boolean().default(true),
+    email: z.string().email().nullable().optional(),
+    name: z.string().min(1).max(255).nullable().optional(),
+    title: z.string().min(1).max(200).optional(), // Backward compatibility
+    description: z.string().max(2000).nullable().optional(),
+    bio: z.string().max(500).nullable().optional(),
+    pricePerSession: z.number().min(0).optional(),
+    standardDuration: z.number().min(15).default(60),
+    serviceCategoryId: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    locationId: z.string().optional(),
     rating: z.number().min(0).max(5).default(0),
     reviewCount: z.number().min(0).default(0),
-    completedBookings: z.number().min(0).default(0),
-    profileImage: z.string().url().optional(),
-    portfolio: z.array(z.string().url()).default([]),
-    certifications: z.array(z.string()).default([]),
-    languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
-    phone: z.string().optional(),
-    website: z.string().url().optional(),
+    isVerified: z.boolean().default(false),
+    isActive: z.boolean().default(true),
+
+    // Additional professional info
+    avatar: z.string().url().nullable().optional(),
+    phone: z.string().max(50).nullable().optional(),
+    website: z.string().url().nullable().optional(),
+    linkedIn: z.string().url().nullable().optional(),
+    instagram: z.string().url().nullable().optional(),
+    facebook: z.string().url().nullable().optional(),
+    twitter: z.string().url().nullable().optional(),
+
+    // Education and experience
+    education: z.string().max(1000).nullable().optional(),
+    experience: z.string().max(2000).nullable().optional(),
+    specialties: z.array(z.string()).default([]),
+    languages: z.array(z.string()).default([]),
+    yearsOfExperience: z.number().min(0).nullable().optional(),
+
     // Documentación y validación profesional
-    dni: z.string().max(20).optional(),
-    cuitCuil: z.string().max(20).optional(),
-    matricula: z.string().max(100).optional(),
-    titleDocumentUrl: z.string().url().optional(),
+    dni: z.string().max(20).nullable().optional(),
+    cuitCuil: z.string().max(20).nullable().optional(),
+    matricula: z.string().max(100).nullable().optional(),
+    titleDocumentUrl: z.string().url().nullable().optional(),
+
+    // MercadoPago
+    mercadoPagoEmail: z.string().email().nullable().optional(),
+    mercadoPagoUserId: z.string().nullable().optional(),
+    mpConfiguredAt: z.coerce.date().nullable().optional(),
   })
   .merge(TimestampsSchema);
 
 export const CreateProfessionalProfileSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000),
+  email: z.string().email().optional(),
+  name: z.string().min(1).max(255).optional(),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
   bio: z.string().max(500).optional(),
-  hourlyRate: z.number().min(0),
-  currency: z.enum(["ARS", "USD"]).default("ARS"),
-  experience: z.number().min(0).max(50),
-  profileImage: z.string().url().optional(),
-  portfolio: z.array(z.string().url()).default([]),
-  certifications: z.array(z.string()).default([]),
-  languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
-  phone: z.string().optional(),
+  pricePerSession: z.number().min(0).optional(),
+  standardDuration: z.number().min(15).default(60),
+  serviceCategoryId: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  locationId: z.string().optional(),
+
+  avatar: z.string().url().optional(),
+  phone: z.string().max(50).optional(),
   website: z.string().url().optional(),
-  // Documentación y validación profesional
+  linkedIn: z.string().url().optional(),
+  instagram: z.string().url().optional(),
+  facebook: z.string().url().optional(),
+  twitter: z.string().url().optional(),
+
+  education: z.string().max(1000).optional(),
+  experience: z.string().max(2000).optional(),
+  specialties: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default([]),
+  yearsOfExperience: z.number().min(0).optional(),
+
   dni: z.string().max(20).optional(),
   cuitCuil: z.string().max(20).optional(),
   matricula: z.string().max(100).optional(),
