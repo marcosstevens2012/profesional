@@ -22,6 +22,10 @@ export default function OnboardingPage() {
     bio: "",
     description: "",
     website: "",
+    dni: "",
+    cuitCuil: "",
+    matricula: "",
+    titleDocumentUrl: "",
   });
   const [error, setError] = useState("");
   const [isResendingEmail, setIsResendingEmail] = useState(false);
@@ -53,12 +57,22 @@ export default function OnboardingPage() {
     e.preventDefault();
     setError("");
 
+    // Validar campos obligatorios
+    if (!formData.dni || !formData.cuitCuil) {
+      setError("DNI y CUIT/CUIL son obligatorios");
+      return;
+    }
+
     try {
       await updateProfile.mutateAsync({
         phone: formData.phone || undefined,
         bio: formData.bio || undefined,
         description: formData.description || undefined,
         website: formData.website || undefined,
+        dni: formData.dni || undefined,
+        cuitCuil: formData.cuitCuil || undefined,
+        matricula: formData.matricula || undefined,
+        titleDocumentUrl: formData.titleDocumentUrl || undefined,
       });
 
       toast.success("Perfil actualizado correctamente");
@@ -254,6 +268,117 @@ export default function OnboardingPage() {
                   }
                   placeholder="https://tusitioweb.com"
                 />
+              </div>
+            </div>
+
+            {/* Documentación y Validación */}
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-semibold mb-4">
+                Documentación Profesional
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="dni">
+                    DNI <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="dni"
+                      name="dni"
+                      type="text"
+                      value={formData.dni}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          dni: e.target.value,
+                        }))
+                      }
+                      placeholder="12345678"
+                      required
+                      maxLength={20}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Documento Nacional de Identidad
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="cuitCuil">
+                    CUIT/CUIL <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="cuitCuil"
+                      name="cuitCuil"
+                      type="text"
+                      value={formData.cuitCuil}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          cuitCuil: e.target.value,
+                        }))
+                      }
+                      placeholder="20-12345678-9"
+                      required
+                      maxLength={20}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Clave Única de Identificación Tributaria/Laboral
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="matricula">
+                    Número de Matrícula (opcional)
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="matricula"
+                      name="matricula"
+                      type="text"
+                      value={formData.matricula}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          matricula: e.target.value,
+                        }))
+                      }
+                      placeholder="MP-12345"
+                      maxLength={100}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Número de matrícula profesional o registro
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="titleDocumentUrl">
+                    Documento del Título (opcional)
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="titleDocumentUrl"
+                      name="titleDocumentUrl"
+                      type="url"
+                      value={formData.titleDocumentUrl}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          titleDocumentUrl: e.target.value,
+                        }))
+                      }
+                      placeholder="https://ejemplo.com/documento.pdf"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    URL de tu título profesional escaneado (foto o PDF). Puedes
+                    subirlo a un servicio como Google Drive, Dropbox, etc.
+                  </p>
+                </div>
               </div>
             </div>
 

@@ -10,7 +10,10 @@ import {
   Switch,
 } from "@/components/ui";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useProfessionalDashboard } from "@/hooks/useProfessionalBookings";
+import {
+  useAcceptMeeting,
+  useProfessionalDashboard,
+} from "@/hooks/useProfessionalBookings";
 import {
   useActiveStatus,
   useBookingStats,
@@ -32,6 +35,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface ProfessionalPanelProps {
@@ -435,25 +439,50 @@ function BookingCard({
   booking: any;
   type: "waiting" | "ready";
 }) {
+  const acceptMeeting = useAcceptMeeting();
+  const router = useRouter();
+
+  const handleAccept = async () => {
+    try {
+      await acceptMeeting.mutateAsync(booking.id);
+    } catch (error) {
+      console.error("Error accepting meeting:", error);
+    }
+  };
+
+  const handleJoinMeeting = () => {
+    router.push(`/bookings/${booking.id}`);
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-2">
             <h4 className="font-semibold">
-              Consulta con {booking.user?.name || "Cliente"}
+              Consulta con{" "}
+              {booking.client?.profile?.firstName ||
+                booking.client?.email ||
+                "Cliente"}
             </h4>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <span>
-                {new Date(booking.scheduledAt).toLocaleDateString("es-AR")}
+                {new Date(booking.scheduledFor).toLocaleDateString("es-AR")}
               </span>
               <span>
-                {new Date(booking.scheduledAt).toLocaleTimeString("es-AR", {
+                {new Date(booking.scheduledFor).toLocaleTimeString("es-AR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </span>
-              <span>ARS ${Number(booking.price).toLocaleString()}</span>
+              {booking.payment?.amount && (
+                <span>
+                  ARS ${Number(booking.payment.amount).toLocaleString()}
+                </span>
+              )}
+              {booking.payment?.status === "APPROVED" && (
+                <span className="text-green-600 font-medium">✓ Pagado</span>
+              )}
             </div>
             {booking.notes && (
               <p className="text-sm text-muted-foreground">
@@ -463,9 +492,19 @@ function BookingCard({
           </div>
           <div className="flex items-center space-x-3">
             {type === "waiting" ? (
-              <Button size="sm">Aceptar</Button>
+              <Button
+                size="sm"
+                onClick={handleAccept}
+                disabled={acceptMeeting.isPending}
+              >
+                {acceptMeeting.isPending ? "Aceptando..." : "Aceptar"}
+              </Button>
             ) : (
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+              <Button
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleJoinMeeting}
+              >
                 Unirse a la Reunión
               </Button>
             )}

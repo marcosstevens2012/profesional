@@ -152,6 +152,11 @@ export const ProfessionalProfileSchema = z
     languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
     phone: z.string().optional(),
     website: z.string().url().optional(),
+    // Documentación y validación profesional
+    dni: z.string().max(20).optional(),
+    cuitCuil: z.string().max(20).optional(),
+    matricula: z.string().max(100).optional(),
+    titleDocumentUrl: z.string().url().optional(),
   })
   .merge(TimestampsSchema);
 
@@ -168,6 +173,11 @@ export const CreateProfessionalProfileSchema = z.object({
   languages: z.array(z.enum(["es", "en", "pt"])).default(["es"]),
   phone: z.string().optional(),
   website: z.string().url().optional(),
+  // Documentación y validación profesional
+  dni: z.string().max(20).optional(),
+  cuitCuil: z.string().max(20).optional(),
+  matricula: z.string().max(100).optional(),
+  titleDocumentUrl: z.string().url().optional(),
 });
 
 export const UpdateProfessionalProfileSchema =
