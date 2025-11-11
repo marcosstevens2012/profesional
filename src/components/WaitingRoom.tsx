@@ -153,6 +153,22 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
           </Card>
         </div>
 
+        {/* Mensaje de permisos */}
+        <div className="absolute top-4 left-4 z-50 max-w-md">
+          <Card className="p-3 bg-blue-50 border-blue-200">
+            <div className="flex items-start gap-2 text-sm text-blue-800">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Permisos requeridos</p>
+                <p className="text-xs mt-1">
+                  Por favor, permite el acceso a tu cámara y micrófono cuando el
+                  navegador lo solicite.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
         <JitsiMeeting
           roomName={jitsiRoom}
           userDisplayName={clientName || professionalName || "Usuario"}

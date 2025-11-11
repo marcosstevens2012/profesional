@@ -50,6 +50,26 @@ export const bookingsAPI = {
   },
 
   /**
+   * Obtener TODAS las bookings del profesional
+   * GET /api/bookings/professional/my-bookings
+   */
+  async getProfessionalAllBookings(): Promise<{
+    bookings: any[];
+    count: number;
+    grouped: any;
+  }> {
+    try {
+      const response = await apiClient.get(
+        "/bookings/professional/my-bookings"
+      );
+      return response.data;
+    } catch (error) {
+      console.error("❌ Error en getProfessionalAllBookings:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Aceptar un booking (profesional)
    * PATCH /api/bookings/:id/accept-meeting
    */

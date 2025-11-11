@@ -80,7 +80,7 @@ export function useProfessionalDashboard() {
   const waitingBookings = useWaitingBookings();
   const meetings = useProfessionalMeetings();
 
-  return {
+  const dashboardData = {
     waitingBookings: waitingBookings.data?.bookings || [],
     waitingCount: waitingBookings.data?.count || 0,
     meetings: meetings.data?.meetings || [],
@@ -92,18 +92,34 @@ export function useProfessionalDashboard() {
       meetings.refetch();
     },
   };
+
+  console.log("🔍 useProfessionalDashboard Debug:");
+  console.log("Waiting Bookings Data:", waitingBookings.data);
+  console.log("Meetings Data:", meetings.data);
+  console.log("Dashboard Data:", dashboardData);
+  console.log("Is Loading:", dashboardData.isLoading);
+  console.log("Error:", dashboardData.error);
+
+  return dashboardData;
 }
 
 /**
  * Hook para verificar si el profesional tiene nuevas solicitudes
  * Útil para mostrar badges de notificación
  */
-export function useHasNewBookingRequests() {
-  const { data, isLoading } = useWaitingBookings();
+export function useHasNewRequests() {
+  const dashboard = useProfessionalDashboard();
+  return dashboard.waitingCount > 0;
+}
 
-  return {
-    hasNewRequests: (data?.count || 0) > 0,
-    newRequestsCount: data?.count || 0,
-    isLoading,
-  };
+/**
+ * Hook para obtener TODAS las bookings del profesional (para debugging/panel completo)
+ */
+export function useProfessionalAllBookings() {
+  return useQuery({
+    queryKey: ["bookings", "professional", "all"],
+    queryFn: () => bookingsAPI.getProfessionalAllBookings(),
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
 }
