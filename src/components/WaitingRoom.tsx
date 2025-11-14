@@ -181,6 +181,9 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
           }
           onVideoConferenceLeft={handleVideoConferenceLeft}
           maxDuration={18 * 60 * 1000} // 18 minutos
+          configOverride={{
+            prejoinPageEnabled: role === "client", // Solo mostrar prejoin para clientes
+          }}
         />
       </div>
     );
