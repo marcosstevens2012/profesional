@@ -74,6 +74,13 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
         disableInviteFunctions: true,
         disableAddingParticipants: true,
         enableEmailInStats: false,
+        // Safari-specific audio fixes
+        disableAudioLevels: true, // Reduce audio sink errors
+        enableNoAudioDetection: false, // Disable problematic audio detection
+        enableNoisyMicDetection: false, // Disable noisy mic detection
+        // Reduce audio device switching attempts
+        disableDeepLinking: true,
+        enableUserRolesBasedOnToken: false,
         toolbarButtons: [
           "microphone",
           "camera",
@@ -204,7 +211,7 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
       <div className="flex flex-col items-center justify-center h-full bg-gray-100 p-8">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Consentimiento para Videollamada
+            Permisos para Videollamada
           </h2>
 
           <div className="mb-6">
@@ -216,8 +223,17 @@ export const JitsiMeeting: React.FC<JitsiMeetingProps> = ({
             <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
               <li>Acceder a su cámara y micrófono</li>
               <li>Procesar audio y video para la sesión</li>
-              <li>Permitir grabación si es soliconsultada</li>
+              <li>Permitir grabación si es solicitada</li>
             </ul>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-yellow-800">
+                <strong>Importante para Safari:</strong> Después de hacer clic
+                en &quot;Acepto&quot;, su navegador solicitará permisos de
+                cámara y micrófono. Por favor, haga clic en &quot;Permitir&quot;
+                para cada uno de ellos.
+              </p>
+            </div>
 
             <p className="text-sm text-gray-500 mb-4">
               Esta sesión tiene una duración máxima de 18 minutos. Sus datos
